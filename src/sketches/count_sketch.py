@@ -59,8 +59,6 @@ class CountSketch(object):
 
     def update(self, number, value):
         for i in range(self.num_hash):
-            print("at i {} hash value {}".format(i, self.hashes[i](number)))
-            print(self.countsketch[i][self.hashes[i](number)])
             self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number)*value
 
     def conservative_update(self, number):

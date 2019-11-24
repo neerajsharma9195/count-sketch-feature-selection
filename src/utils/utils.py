@@ -9,6 +9,3 @@ def isPrime(n: int):
             return False
     return True
 
-
-if __name__ == '__main__':
-    print(isPrime(3838393))
