@@ -32,6 +32,7 @@ class TopK(object):
         if self.count < self.k:
             if self.is_item_present(item):
                 self.update_item(item)
+                self.features[item.key] = item.value
                 heapq.heapify(self.heap)
             else:
                 heapq.heappush(self.heap, item)
