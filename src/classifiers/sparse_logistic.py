@@ -15,12 +15,13 @@ class LogisticRegression(object):
         self.b = 0
         self.learning_rate = 0.01
         self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
-        self.top_k = TopK(1 << 8 - 1)
+        self.top_k = TopK(1 << 14 - 1)
 
     def sigmoid(self, x):
         return 1 / (1 + math.exp(-x))
 
     def loss(self, y, p):
+        print("y {} p {}".format(y, p))
         return y * math.log(p) + (1 - y) * math.log(1 - p)
 
     def train(self, X, y):
@@ -44,8 +45,11 @@ class LogisticRegression(object):
             self.top_k.push_item(Node(feature_pos[i], value))
         return loss
 
-    def predict(self, X):
-        a = self.sigmoid(np.dot(X, self.w) + self.b)
+    def predict(self, feature_pos, feature_val):
+        logit = 0
+        for i in range(len(feature_pos)):
+            logit += self.top_k.get_item(feature_pos[i]) * feature_val[i]
+        a = self.sigmoid(logit)
         if a > 0.5:
             return 1
         else:
@@ -81,21 +85,29 @@ if __name__ == '__main__':
     D = 47236
     lgr = LogisticRegression(num_features=D)
     print("len of labels {}".format(len(labels)))
-    for i in range(len(labels)):
+    for i in range(850):
+        print("i {}".format(i))
         label = labels[i]
         label = (1 + label) / 2
         example_features = features[i]
-        print("label {}".format(label))
         feature_pos = [item[0] for item in example_features]
         feature_vals = [item[1] for item in example_features]
         loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
         print("loss {}".format(loss))
-    while len(lgr.top_k.heap) > 0:
-        print("heap value {}".format(heapq.heappop(lgr.top_k.heap)))
-    print(lgr.cms.countsketch)
-    test_fileName = "rcv1_test.binary"
-    test_filePath = os.path.join(data_directory_path, test_fileName)
-    test_labels, test_features = process_data(test_filePath)
+    # test_fileName = "rcv1_test.binary"
+    # test_filePath = os.path.join(data_directory_path, test_fileName)
+    # test_labels, test_features = process_data(test_filePath)
+    # print("test labels {}".format(test_labels))
+    correct = 0
+    for i in range(850):
+        true_label = int((labels[i] + 1) / 2)
+        test_example = features[i]
+        feature_pos = [item[0] for item in test_example]
+        feature_vals = [item[1] for item in test_example]
+        pred_label = lgr.predict(feature_pos, feature_vals)
+        if pred_label == true_label:
+            correct += 1
+    print("correctly classified test examples {}".format(correct))
 
     # n, d = X.shape
     # logistic = LogisticRegression(n, d)
