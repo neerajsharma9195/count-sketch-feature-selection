@@ -7,6 +7,7 @@ class TopK(object):
         self.k = k
         self.features = {}
         self.heap = []
+        self.count = 0
 
     def get_min_item(self):
         return self.heap[0]
@@ -15,29 +16,21 @@ class TopK(object):
         min_item = self.get_min_item()
         if item[1] > min_item[1]:
             if item[0] in self.features.keys():
-                index = self.heap.index((item[0], self.features[item[0]])) # is it O(1)
+                index = self.heap.index((item[0], self.features[item[0]]))  # is it O(1)
                 self.heap[index] = self.heap[-1]
                 heapq.heappop(self.heap)
-                heapq.heapify(self.heap)
+                heapq.heapify(self.heap)  # this heapify will work or not ...
                 heapq.heappush(self.heap, (item[0], item[1]))
             else:
-               if self.heap
-
-
-        print("before push {} num items {}".format(self.heap, self.num_items))
-        print("item {}".format(item))
-        if self.num_items <= self.k:
-            heapq.heappop(self.heap)
-            heapq.heappush(self.heap, item)
-            self.num_items += 1
-        else:
-            cur_min = heapq.nsmallest(1, self.heap)
-            print("current min {}".format(cur_min))
-            if item[0] in self.heap_dict:
-                self.h
-            if cur_min[0][1] < item[1]:
-                print("popping {}".format(heapq.heappop(self.heap)))
-                heapq.heappush(self.heap, item)
+                if self.count < self.k:
+                    heapq.heappush(self.heap, item)
+                    self.count += 1
+                    self.features[item[0]] = item[1]
+                elif self.count == self.k:
+                    heapq.heappop(self.heap)
+                    heapq.heappush(self.heap, item)
+                    #todo: need to remove it from features
+                    self.features
 
     def comparator(self, item1, item2):
         if item1[1] > item2[1]:
