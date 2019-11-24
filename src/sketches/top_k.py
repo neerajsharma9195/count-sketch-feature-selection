@@ -1,6 +1,16 @@
 import heapq
 from collections import OrderedDict
 
+class Node:
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+    def __str__(self):
+        return str("{} : {}".format(self.key, self.value))
 
 class TopK(object):
     def __init__(self, k):
@@ -10,52 +20,68 @@ class TopK(object):
         self.count = 0
 
     def get_min_item(self):
-        return self.heap[0]
+        if self.count == 0:
+            return Node(-1,-1)
+        else:
+            return self.heap[0]
 
     def push_item(self, item):
         min_item = self.get_min_item()
-        if item[1] > min_item[1]:
-            if item[0] in self.features.keys():
-                index = self.heap.index((item[0], self.features[item[0]]))  # is it O(1)
-                self.heap[index] = self.heap[-1]
-                heapq.heappop(self.heap)
+        if self.count < self.k:
+            heapq.heappush(self.heap, item)
+            self.count += 1
+            self.features[item.key] = item.value
+        elif item.value > min_item.value:
+            if item.key in self.features.keys():
+                for element in self.heap:
+                    if element.key == item.key:
+                        element.value = item.value
+                        break
                 heapq.heapify(self.heap)  # this heapify will work or not ...
-                heapq.heappush(self.heap, (item[0], item[1]))
-            else:
-                if self.count < self.k:
-                    heapq.heappush(self.heap, item)
-                    self.count += 1
-                    self.features[item[0]] = item[1]
-                elif self.count == self.k:
-                    heapq.heappop(self.heap)
-                    heapq.heappush(self.heap, item)
-                    #todo: need to remove it from features
-                    self.features
+                self.features[item.key] = item.value
+            else :
+                current_item = heapq.heappop(self.heap)
+                heapq.heappush(self.heap, item)
+                self.features.pop(current_item.key)
+                self.features[item.key] = item.value
 
-    def comparator(self, item1, item2):
-        if item1[1] > item2[1]:
-            return item1[1]
-        elif item1[1] == item2[1]:
-            return item1[0] > item1[1]
-
+    def printheap(self):
+        for item in self.heap:
+            print(item)
 
 if __name__ == '__main__':
     top_k = TopK(k=2)
     print(top_k.heap)
-    top_k.push_item((5, 1))
+    top_k.push_item(Node(5, 1))
     print("Get item {}".format(top_k.get_min_item()))
-    top_k.push_item((3, 1))
+    top_k.printheap()
+    top_k.push_item(Node(3, 1))
     print("Get item {}".format(top_k.get_min_item()))
-    top_k.push_item((7, 2))
+    top_k.printheap()
+    top_k.push_item(Node(7, 2))
     print("Get item {}".format(top_k.get_min_item()))
-    top_k.push_item((7, 3))
+    top_k.printheap()
+    top_k.push_item(Node(7, 3))
     print("Get item {}".format(top_k.get_min_item()))
-    top_k.push_item((9, 3))
+    top_k.printheap()
+    top_k.push_item(Node(9, 3))
     print("Get item {}".format(top_k.get_min_item()))
-    top_k.push_item((10, 3))
+    top_k.printheap()
+    top_k.push_item(Node(10, 3))
     print("Get item {}".format(top_k.get_min_item()))
-    top_k.push_item((9, 4))
+    top_k.printheap()
+    top_k.push_item(Node(9, 4))
     print("Get item {}".format(top_k.get_min_item()))
-    top_k.push_item((9, 3))
+    top_k.printheap()
+    top_k.push_item(Node(9, 3))
     print("Get item {}".format(top_k.get_min_item()))
-    print("final heap {}".format(top_k.heap))
+    top_k.printheap()
+    top_k.push_item(Node(10, 3))
+    print("Get item {}".format(top_k.get_min_item()))
+    top_k.printheap()
+    top_k.push_item(Node(10, 1))
+    print("Get item {}".format(top_k.get_min_item()))
+    top_k.printheap()
+    top_k.push_item(Node(10, 2))
+    print("Get item {}".format(top_k.get_min_item()))
+    top_k.printheap()
