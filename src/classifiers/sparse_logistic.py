@@ -40,7 +40,8 @@ class LogisticRegression(object):
         for i in range(len(feature_pos)):
             updated_val = features[i] - self.learning_rate * gradient * features[i]
             self.cms.update(feature_pos[i], updated_val)
-            self.top_k.push_item(Node(feature_pos[i], updated_val))
+            value = self.cms.query(feature_pos[i])
+            self.top_k.push_item(Node(feature_pos[i], value))
         return loss
 
     def predict(self, X):
