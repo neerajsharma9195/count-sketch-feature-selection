@@ -5,7 +5,6 @@ from src.processing.parse_data import process_data
 import os
 import math
 from src.sketches.top_k import TopK, Node
-import heapq
 
 
 class LogisticRegression(object):
@@ -13,15 +12,14 @@ class LogisticRegression(object):
         self.D = num_features
         self.w = np.array([0] * self.D)
         self.b = 0
-        self.learning_rate = 0.01
+        self.learning_rate = 0.5
         self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
         self.top_k = TopK(1 << 14 - 1)
 
     def sigmoid(self, x):
-        return 1 / (1 + math.exp(-x))
+        return 1.0 / (1.0 + math.exp(-x))
 
     def loss(self, y, p):
-        print("y {} p {}".format(y, p))
         return y * math.log(p) + (1 - y) * math.log(1 - p)
 
     def train(self, X, y):
@@ -33,15 +31,29 @@ class LogisticRegression(object):
 
     def train_with_sketch(self, feature_pos, features, label):
         logit = 0
+        min_logit = float("inf")
+        max_logit = float("-inf")
         for i in range(len(feature_pos)):
-            logit += self.top_k.get_item(feature_pos[i]) * features[i]
-        sigm_val = self.sigmoid(logit)
+            # print("top k at pos {} value {}".format(feature_pos[i], self.top_k.get_item(feature_pos[i])))
+            val = self.top_k.get_item(feature_pos[i]) * features[i]
+            if val > max_logit:
+                max_logit = val
+            if val < min_logit:
+                min_logit = val
+            logit += val
+        if max_logit - min_logit == 0:
+            max_logit = 1
+            min_logit = 0
+        normalized_weights = (logit - min_logit) / (max_logit - min_logit)
+        print("normalized weights {}".format(normalized_weights))
+        sigm_val = self.sigmoid(normalized_weights)
+        print("label {} sigmoid {}".format(label, sigm_val))
         loss = self.loss(y=label, p=sigm_val)
         gradient = (label - sigm_val)
         for i in range(len(feature_pos)):
-            updated_val = features[i] - self.learning_rate * gradient * features[i]
-            self.cms.update(feature_pos[i], updated_val)
-            value = self.cms.query(feature_pos[i])
+            # updating the change only on previous values
+            updated_val = self.learning_rate * gradient * features[i]
+            value = self.cms.update(feature_pos[i], updated_val)
             self.top_k.push_item(Node(feature_pos[i], value))
         return loss
 
@@ -85,7 +97,7 @@ if __name__ == '__main__':
     D = 47236
     lgr = LogisticRegression(num_features=D)
     print("len of labels {}".format(len(labels)))
-    for i in range(850):
+    for i in range(len(labels)):
         print("i {}".format(i))
         label = labels[i]
         label = (1 + label) / 2
@@ -93,7 +105,6 @@ if __name__ == '__main__':
         feature_pos = [item[0] for item in example_features]
         feature_vals = [item[1] for item in example_features]
         loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
-        print("loss {}".format(loss))
     # test_fileName = "rcv1_test.binary"
     # test_filePath = os.path.join(data_directory_path, test_fileName)
     # test_labels, test_features = process_data(test_filePath)

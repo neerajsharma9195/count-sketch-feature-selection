@@ -58,8 +58,12 @@ class CountSketch(object):
         return [(i, self.first_nums[i], self.second_nums[i], self.hashes[i](number)) for i in range(len(self.hashes))]
 
     def update(self, number, value):
+        values = []
         for i in range(self.num_hash):
-            self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number)*value
+            sign = self.signhashes[i](number)
+            self.countsketch[i][self.hashes[i](number)] += sign*value
+            values.append(sign * self.countsketch[i][self.hashes[i](number)])
+        return s.median(values)
 
     def conservative_update(self, number):
         median_value = self.query(number)
