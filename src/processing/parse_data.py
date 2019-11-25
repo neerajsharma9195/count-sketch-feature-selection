@@ -1,5 +1,6 @@
 import os
 import json
+import numpy as np
 
 
 def process_data(filePath, batch_size=1):
@@ -12,6 +13,18 @@ def process_data(filePath, batch_size=1):
             current_features = [(int(item[0]), float(item[1])) for item in features]
             all_features.append(current_features)
     return labels, all_features
+
+
+def process_data_to_numpy(filePath):
+    labels = []
+    all_features = []
+    with open(filePath, 'r') as f:
+        for line in f.readlines():
+            label, features = process_line(line)
+            labels.append(int(label))
+            current_features = [(int(item[0]), float(item[1])) for item in features]
+            all_features.append(current_features)
+    return np.array(labels), all_features
 
 
 def process_line(line):
