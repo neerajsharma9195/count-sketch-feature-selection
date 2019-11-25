@@ -27,7 +27,7 @@ class CustomCountMinSketch(object):
     def get_hash_values(self, number):
         return [(i, self.first_nums[i], self.second_nums[i], self.hashes[i](number)) for i in range(len(self.hashes))]
 
-    def update(self, number):
+    def update(self, number, value):
         '''
         If number is > 0: add it to countMinPositive else add it to countMinNegative
         :param number:
@@ -35,10 +35,11 @@ class CustomCountMinSketch(object):
         '''
         if number > 0:
             for i, hash_func in enumerate(self.hashes):
-                self.countSketchPos[i][hash_func(number)] += 1
+                self.countSketchPos[i][hash_func(number)] += value
         else:
             for i, hash_func in enumerate(self.hashes):
-                self.countSketchNeg[i][hash_func(abs(number))] += 1
+                self.countSketchNeg[i][hash_func(abs(number))] += value
+        return self.query(number)
 
     # def conservative_update(self, number):
     #     median_value = self.query(number)
@@ -71,12 +72,12 @@ class CustomCountMinSketch(object):
 
 if __name__ == '__main__':
     cms = CustomCountMinSketch(3, 10)
-    cms.update(8)
-    cms.update(8)
-    cms.update(8)
+    cms.update(8,10)
+    cms.update(8,9)
+    cms.update(5,10)
     #cms.update(5)
-    cms.update(-8)
-    cms.update(-8)
+    cms.update(-8,10)
+    cms.update(-8,8)
     print("query {}".format(cms.query(8)))
     print("query {}".format(cms.query(5)))
     print("query {}".format(cms.query(-8)))
