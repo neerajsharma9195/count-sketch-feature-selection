@@ -1,4 +1,6 @@
 import statistics as s
+import random
+from src.utils.utils import isPrime
 
 
 class CustomCountMinSketch(object):
@@ -7,10 +9,15 @@ class CustomCountMinSketch(object):
         self.bucket_size = w
         self.countSketchPos = [[0 for i in range(w)] for j in range(h)]
         self.countSketchNeg = [[0 for i in range(w)] for j in range(h)]
-        self.first_nums = [5, 11, 8]
-        self.second_nums = [9, 19, 3]
-        self.ps = [13, 17, 19]
-        # todo: hash function: random generator (a, b, p: prime > w)
+        self.first_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
+        self.second_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
+        self.ps = []
+        for i in range(self.num_hash):
+            a = random.randint(self.bucket_size + 1, self.bucket_size + 3000)
+            while not isPrime(a):
+                a = random.randint(self.bucket_size + 1, self.bucket_size + 3000)
+            self.ps.append(a)
+        print("ps {}".format(self.ps))
         '''
         hash function: ((a*number + b)%p)%w
         '''
@@ -18,37 +25,22 @@ class CustomCountMinSketch(object):
         second_hash_function = lambda number: ((self.first_nums[1] * number + self.second_nums[1]) % self.ps[1]) % w
         third_hash_function = lambda number: ((self.first_nums[2] * number + self.second_nums[2]) % self.ps[2]) % w
         self.hashes = [first_hash_function, second_hash_function, third_hash_function]
-        # for i in range(0, self.num_hash):
-        #     self.hashes.append(lambda number: (((self.first_nums[i] * number + self.second_nums[i]) % self.ps[i]) % w))
-        # self.hashes = (lambda number: (((self.first_nums[i] * number + self.second_nums[i]) % self.ps[i]) % w) for i in range(self.num_hash))
-        # self.signhashes = (lambda number: (1 if (((a * number + b) % p) % 2 == 0) else -1) for a, b, p in
-        #                    zip(self.sign_firsts, self.sign_seconds, self.sign_ps))
 
     def get_hash_values(self, number):
         return [(i, self.first_nums[i], self.second_nums[i], self.hashes[i](number)) for i in range(len(self.hashes))]
 
-    def update(self, number):
+    def update(self, number, value):
         '''
         If number is > 0: add it to countMinPositive else add it to countMinNegative
         :param number:
         :return:
         '''
-        if number > 0:
+        if value > 0:
             for i, hash_func in enumerate(self.hashes):
-                self.countSketchPos[i][hash_func(number)] += 1
+                self.countSketchPos[i][hash_func(number)] += value
         else:
             for i, hash_func in enumerate(self.hashes):
-                self.countSketchNeg[i][hash_func(abs(number))] += 1
-
-    # def conservative_update(self, number):
-    #     median_value = self.query(number)
-    #     for i in range(self.num_hash):
-    #         if number > 0:
-    #             if self.countsketch[i][self.hashes[i](number)] < median_value:
-    #                 self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number)
-    #         else:
-    #             if self.countsketch[i][self.hashes[i](number)] >= median_value:
-    #                 self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number)
+                self.countSketchNeg[i][hash_func(abs(number))] += value
 
     def print_cms(self):
         print("positive cms {}".format(self.countSketchPos))
@@ -71,12 +63,12 @@ class CustomCountMinSketch(object):
 
 if __name__ == '__main__':
     cms = CustomCountMinSketch(3, 10)
-    cms.update(8)
-    cms.update(8)
-    cms.update(8)
+    cms.update(8, 1)
+    cms.update(8, 0.1)
+    cms.update(8, - 0.1)
     #cms.update(5)
-    cms.update(-8)
-    cms.update(-8)
+    cms.update(1, 1)
+    cms.update(2, 1)
     print("query {}".format(cms.query(8)))
     print("query {}".format(cms.query(5)))
     print("query {}".format(cms.query(-8)))
