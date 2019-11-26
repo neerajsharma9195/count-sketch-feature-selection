@@ -50,6 +50,8 @@ class LogisticRegression(object):
         normalized_weights = (logit - min_logit) / (max_logit - min_logit)
         print("normalized weights {}".format(normalized_weights))
         sigm_val = self.sigmoid(normalized_weights)
+        if sigm_val == 1.0:
+            sigm_val = sigm_val - (1e-5)
         print("label {} sigmoid {}".format(label, sigm_val))
         gradient = (label - sigm_val)
         loss = self.loss(y=label, p=sigm_val)
@@ -101,36 +103,56 @@ if __name__ == '__main__':
     data_directory_path = os.path.join(current_directory, '..', 'data')
     fileName = "rcv1_train.binary"
     filePath = os.path.join(data_directory_path, fileName)
-    labels, features = process_data(filePath)
-    D = 47236
+    # labels, features = process_data(filePath)
+    D = 9784
+    features = np.load(os.path.join(data_directory_path, "mnist_nonsparse.npy"))
+    labels = np.load(os.path.join(data_directory_path, "mnistdata_label.npy"))
+    print("x shape {}".format(features.shape))
+    print("y shape {}".format(labels.shape))
     lgr = LogisticRegression(num_features=D)
-    print("len of labels {}".format(len(labels)))
-    for epoch in range(0, 4):
-        print("epoch {}".format(epoch))
-        for i in range(3000):
-            print("i {}".format(i))
-            label = labels[i]
-            label = (1 + label) / 2
-            example_features = features[i]
-            feature_pos = [item[0] for item in example_features]
-            feature_vals = [item[1] for item in example_features]
-            loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
-            print("loss {}".format(loss))
-        print("total loss after epoch {} is {}".format(i, lgr.loss_val))
-    # test_fileName = "rcv1_test.binary"
-    # test_filePath = os.path.join(data_directory_path, test_fileName)
-    # test_labels, test_features = process_data(test_filePath)
-    # print("test labels {}".format(test_labels))
+    # print("len of labels {}".format(len(labels)))
+    # print("len of labels {}".format(len(labels)))
+    for i in range(1000):
+        print(i)
+        label = labels[i]
+        example_feature = features[i]
+        rangeoffeatures = [i for i in range(len(features[i]))]
+        loss = lgr.train_with_sketch(rangeoffeatures, features[i], label)
+        print("loss {}".format(loss))
     correct = 0
-    for i in range(3000):
-        true_label = int((labels[i] + 1) / 2)
+    for i in range(1000, 1500):
         test_example = features[i]
-        feature_pos = [item[0] for item in test_example]
-        feature_vals = [item[1] for item in test_example]
-        pred_label = lgr.predict(feature_pos, feature_vals)
-        if pred_label == true_label:
+        rangeoffeatures = [i for i in range(len(features[i]))]
+        pred_label = lgr.predict(rangeoffeatures, features[i])
+        if pred_label == labels[i]:
             correct += 1
     print("correctly classified test examples {}".format(correct))
+    # for epoch in range(0, 4):
+    #     print("epoch {}".format(epoch))
+    #     for i in range(3000):
+    #         print("i {}".format(i))
+    #         label = labels[i]
+    #         label = (1 + label) / 2
+    #         example_features = features[i]
+    #         feature_pos = [item[0] for item in example_features]
+    #         feature_vals = [item[1] for item in example_features]
+    #         loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
+    #         print("loss {}".format(loss))
+    #     print("total loss after epoch {} is {}".format(i, lgr.loss_val))
+    # # test_fileName = "rcv1_test.binary"
+    # # test_filePath = os.path.join(data_directory_path, test_fileName)
+    # # test_labels, test_features = process_data(test_filePath)
+    # # print("test labels {}".format(test_labels))
+    # correct = 0
+    # for i in range(3000):
+    #     true_label = int((labels[i] + 1) / 2)
+    #     test_example = features[i]
+    #     feature_pos = [item[0] for item in test_example]
+    #     feature_vals = [item[1] for item in test_example]
+    #     pred_label = lgr.predict(feature_pos, feature_vals)
+    #     if pred_label == true_label:
+    #         correct += 1
+    # print("correctly classified test examples {}".format(correct))
 
     # n, d = X.shape
     # logistic = LogisticRegression(n, d)
