@@ -14,13 +14,14 @@ class LogisticRegression(object):
         self.b = 0
         self.learning_rate = 0.5
         self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
-        self.top_k = TopK(1 << 14 - 1)
+        self.top_k = TopK(1 << 16 - 1)
+        self.loss_val = 0
 
     def sigmoid(self, x):
         return 1.0 / (1.0 + math.exp(-x))
 
     def loss(self, y, p):
-        return y * math.log(p) + (1 - y) * math.log(1 - p)
+        return - (y * math.log(p) + (1 - y) * math.log(1 - p))
 
     def train(self, X, y):
         y_hat = np.dot(X, self.w) + self.b
@@ -35,11 +36,13 @@ class LogisticRegression(object):
         max_logit = float("-inf")
         for i in range(len(feature_pos)):
             # print("top k at pos {} value {}".format(feature_pos[i], self.top_k.get_item(feature_pos[i])))
+            # multiplying w[i] with x[i]
             val = self.top_k.get_item(feature_pos[i]) * features[i]
             if val > max_logit:
                 max_logit = val
             if val < min_logit:
                 min_logit = val
+            # calculating wTx
             logit += val
         if max_logit - min_logit == 0:
             max_logit = 1
@@ -48,14 +51,19 @@ class LogisticRegression(object):
         print("normalized weights {}".format(normalized_weights))
         sigm_val = self.sigmoid(normalized_weights)
         print("label {} sigmoid {}".format(label, sigm_val))
-        loss = self.loss(y=label, p=sigm_val)
         gradient = (label - sigm_val)
-        for i in range(len(feature_pos)):
-            # updating the change only on previous values
-            updated_val = self.learning_rate * gradient * features[i]
-            value = self.cms.update(feature_pos[i], updated_val)
-            self.top_k.push_item(Node(feature_pos[i], value))
+        loss = self.loss(y=label, p=sigm_val)
+        self.loss_val += loss
+        if gradient != 0:
+            for i in range(len(feature_pos)):
+                # updating the change only on previous values
+                updated_val = self.learning_rate * gradient * features[i]
+                value = self.cms.update(feature_pos[i], updated_val)
+                self.top_k.push_item(Node(feature_pos[i], value))
         return loss
+
+    def negative_log_likelihood(self, y, x):
+        return - y * x / (1 + math.exp(y))
 
     def predict(self, feature_pos, feature_val):
         logit = 0
@@ -97,20 +105,24 @@ if __name__ == '__main__':
     D = 47236
     lgr = LogisticRegression(num_features=D)
     print("len of labels {}".format(len(labels)))
-    for i in range(len(labels)):
-        print("i {}".format(i))
-        label = labels[i]
-        label = (1 + label) / 2
-        example_features = features[i]
-        feature_pos = [item[0] for item in example_features]
-        feature_vals = [item[1] for item in example_features]
-        loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
+    for epoch in range(0, 4):
+        print("epoch {}".format(epoch))
+        for i in range(3000):
+            print("i {}".format(i))
+            label = labels[i]
+            label = (1 + label) / 2
+            example_features = features[i]
+            feature_pos = [item[0] for item in example_features]
+            feature_vals = [item[1] for item in example_features]
+            loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
+            print("loss {}".format(loss))
+        print("total loss after epoch {} is {}".format(i, lgr.loss_val))
     # test_fileName = "rcv1_test.binary"
     # test_filePath = os.path.join(data_directory_path, test_fileName)
     # test_labels, test_features = process_data(test_filePath)
     # print("test labels {}".format(test_labels))
     correct = 0
-    for i in range(850):
+    for i in range(3000):
         true_label = int((labels[i] + 1) / 2)
         test_example = features[i]
         feature_pos = [item[0] for item in test_example]

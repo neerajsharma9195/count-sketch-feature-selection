@@ -40,7 +40,8 @@ class CustomCountMinSketch(object):
                 self.countSketchPos[i][hash_func(number)] += value
         else:
             for i, hash_func in enumerate(self.hashes):
-                self.countSketchNeg[i][hash_func(abs(number))] += value
+                self.countSketchNeg[i][hash_func(number)] += abs(value)
+        return self.query(number)
 
     def print_cms(self):
         print("positive cms {}".format(self.countSketchPos))
@@ -56,9 +57,10 @@ class CustomCountMinSketch(object):
         negs = []
         for i, hash_func in enumerate(self.hashes):
             poses.append(self.countSketchPos[i][hash_func(number)])
-            negs.append(self.countSketchNeg[i][hash_func(abs(number))])
-        print("query for number {} poses {} negs {}".format(number, poses, negs))
-        return abs(min(poses) - max(negs))
+            negs.append(self.countSketchNeg[i][hash_func(number)])
+        resp = min(poses) - max(negs)
+        #print("resp for query number {} {}".format(number, resp))
+        return resp
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
-from src.sketches.custom_count_sketch import CustomCountSketch
+from src.sketches.custom_count_min_sketch import CustomCountMinSketch
 from src.processing.parse_data import process_data
 import os
 import math
@@ -13,7 +13,7 @@ class LogisticRegression(object):
         self.w = np.array([0] * self.D)
         self.b = 0
         self.learning_rate = 0.5
-        self.cms = CustomCountSketch(3, int(np.log(self.D) ** 2 / 3))
+        self.cms = CustomCountMinSketch(3, int(np.log(self.D) ** 2 / 3))
         self.top_k = TopK(1 << 14 - 1)
 
     def sigmoid(self, x):
@@ -109,6 +109,10 @@ if __name__ == '__main__':
             feature_vals = [item[1] for item in example_features]
             loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
             print("loss {}".format(loss))
+    # test_fileName = "rcv1_test.binary"
+    # test_filePath = os.path.join(data_directory_path, test_fileName)
+    # test_labels, test_features = process_data(test_filePath)
+    # print("test labels {}".format(test_labels))
     correct = 0
     for i in range(1000):
         true_label = int((labels[i] + 1) / 2)
