@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
-from src.sketches.custom_count_sketch import CustomCountSketch
+from src.sketches.count_sketch_version_2 import CustomCountSketch
 from src.processing.parse_data import process_data
 import os
 import math
@@ -98,9 +98,9 @@ if __name__ == '__main__':
     D = 47236
     lgr = LogisticRegression(num_features=D)
     print("len of labels {}".format(len(labels)))
-    for epoch in range(0, 3):
+    for epoch in range(0, 1):
         print("epoch {}".format(epoch))
-        for i in range(1000):
+        for i in range(3000):
             print("i {}".format(i))
             label = labels[i]
             label = (1 + label) / 2
