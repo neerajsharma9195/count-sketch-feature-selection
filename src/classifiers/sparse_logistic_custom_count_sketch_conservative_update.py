@@ -84,9 +84,14 @@ if __name__ == '__main__':
             loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
             print("loss {}".format(loss))
     correct = 0
-    for i in range(len(labels)):
-        true_label = int((labels[i] + 1) / 2)
-        test_example = features[i]
+    test_fileName = "rcv1_test.binary"
+    test_filePath = os.path.join(data_directory_path, test_fileName)
+    test_labels, test_features = process_data(test_filePath)
+    print("test labels size {}".format(len(test_labels)))
+    for i in range(len(test_labels)):
+        print("{} test example".format(i))
+        true_label = int((test_labels[i] + 1) / 2)
+        test_example = test_features[i]
         feature_pos = [item[0] for item in test_example]
         feature_vals = [item[1] for item in test_example]
         pred_label = lgr.predict(feature_pos, feature_vals)
