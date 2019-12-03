@@ -10,11 +10,12 @@ from src.sketches.top_k import TopK, Node
 class LogisticRegression(object):
     def __init__(self, num_features):
         self.D = num_features
-        self.w = np.array([0] * self.D)
+        #self.w = np.array([0] * self.D)
         self.b = 0
         self.learning_rate = 5e-1
         self.mu = 0.0001
-        self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
+        self.cms = CountSketch(3, (1<<18) - 1)
+        #self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
         self.top_k = TopK((1 << 14) - 1)
         self.loss_val = 0
 
@@ -133,7 +134,7 @@ if __name__ == '__main__':
     #     pred_label = lgr.predict(rangeoffeatures, features[i])
     #     if pred_label == labels[i]:
     #         correct += 1
-    for epoch in range(0, 10):
+    for epoch in range(0, 1):
         print("epoch {}".format(epoch))
         for i in range(len(labels)):
             print("i {}".format(i))
@@ -145,10 +146,10 @@ if __name__ == '__main__':
             loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
             print("loss {}".format(loss))
         print("total loss after epoch {} is {}".format(i, lgr.loss_val))
-    # # test_fileName = "rcv1_test.binary"
-    # # test_filePath = os.path.join(data_directory_path, test_fileName)
-    # # test_labels, test_features = process_data(test_filePath)
-    # # print("test labels {}".format(test_labels))
+    test_fileName = "rcv1_test.binary"
+    test_filePath = os.path.join(data_directory_path, test_fileName)
+    test_labels, test_features = process_data(test_filePath)
+    print("test labels size {}".format(len(test_labels)))
     print("printing heap")
     with open("topk_results.txt", 'w') as f:
         for item in lgr.top_k.heap:
@@ -156,9 +157,10 @@ if __name__ == '__main__':
             value = lgr.top_k.features[key]
             f.write("{}:{}\n".format(key, value))
     correct = 0
-    for i in range(5000):
-        true_label = int((labels[i] + 1) / 2)
-        test_example = features[i]
+    for i in range(len(test_labels)):
+        print('test example {}'.format(i))
+        true_label = int((test_labels[i] + 1) / 2)
+        test_example = test_features[i]
         feature_pos = [item[0] for item in test_example]
         feature_vals = [item[1] for item in test_example]
         pred_label = lgr.predict(feature_pos, feature_vals)

@@ -6,7 +6,7 @@ from src.utils.utils import isPrime
 class CustomCountMinSketch(object):
     def __init__(self, h, w):
         self.num_hash = h
-        self.bucket_size = (1 << 18) - 1
+        self.bucket_size = w
         self.countSketchPos = [[0 for i in range(self.bucket_size)] for j in range(h)]
         self.countSketchNeg = [[0 for i in range(self.bucket_size)] for j in range(h)]
         self.first_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
@@ -23,8 +23,8 @@ class CustomCountMinSketch(object):
         '''
         first_hash_function = lambda number: ((self.first_nums[0] * number + self.second_nums[0]) % self.ps[0]) % w
         second_hash_function = lambda number: ((self.first_nums[1] * number + self.second_nums[1]) % self.ps[1]) % w
-        third_hash_function = lambda number: ((self.first_nums[2] * number + self.second_nums[2]) % self.ps[2]) % w
-        self.hashes = [first_hash_function, second_hash_function, third_hash_function]
+        #third_hash_function = lambda number: ((self.first_nums[2] * number + self.second_nums[2]) % self.ps[2]) % w
+        self.hashes = [first_hash_function, second_hash_function] #, third_hash_function]
 
     def get_hash_values(self, number):
         return [(i, self.first_nums[i], self.second_nums[i], self.hashes[i](number)) for i in range(len(self.hashes))]

@@ -10,17 +10,18 @@ from src.sketches.top_k import TopK, Node
 class LogisticRegression(object):
     def __init__(self, num_features):
         self.D = num_features
-        self.w = np.array([0] * self.D)
-        self.b = 0
         self.learning_rate = 0.5
-        self.cms = CustomCountSketch(3, int(np.log(self.D) ** 2 / 3))
+        self.cms = CustomCountSketch(3, (1<<18) - 1)
         self.top_k = TopK(1 << 14 - 1)
 
     def sigmoid(self, x):
-        return 1.0 / (1.0 + math.exp(-x))
+        if x >= 0:
+            return 1. / (1. + np.exp(-x))
+        else:
+            return np.exp(x) / (1. + np.exp(x))
 
     def loss(self, y, p):
-        return y * math.log(p) + (1 - y) * math.log(1 - p)
+        return -(y * math.log(p) + (1 - y) * math.log(1 - p))
 
     def train_with_sketch(self, feature_pos, features, label):
         logit = 0
@@ -73,7 +74,7 @@ if __name__ == '__main__':
     print("len of labels {}".format(len(labels)))
     for epoch in range(0, 1):
         print("epoch {}".format(epoch))
-        for i in range(3000):
+        for i in range(len(labels)):
             print("i {}".format(i))
             label = labels[i]
             label = (1 + label) / 2
@@ -83,7 +84,7 @@ if __name__ == '__main__':
             loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
             print("loss {}".format(loss))
     correct = 0
-    for i in range(1000):
+    for i in range(len(labels)):
         true_label = int((labels[i] + 1) / 2)
         test_example = features[i]
         feature_pos = [item[0] for item in test_example]

@@ -7,8 +7,7 @@ class CustomCountSketch(object):
     def __init__(self, h, w):
         self.num_hash = h
         self.bucket_size = w
-        self.countsketch = [[0 for i in range(w)] for j in range(h)]
-        random.seed(42)
+        self.countsketch = [[0 for i in range(self.bucket_size)] for j in range(h)]
         self.first_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
         self.second_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
         self.sign_firsts = [random.randint(1, 1000) for i in range(self.num_hash)]
@@ -63,10 +62,10 @@ class CustomCountSketch(object):
         # todo: check if number > 0 then should we use <= or just < sign for Median value
         for i in range(self.num_hash):
             if value > 0:
-                if self.countsketch[i][self.hashes[i](number)] <= median_value:
+                if self.countsketch[i][self.hashes[i](number)]*self.signhashes[i](number) <= median_value:
                     self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number) * value
             else:
-                if self.countsketch[i][self.hashes[i](number)] > median_value:
+                if self.countsketch[i][self.hashes[i](number)]*self.signhashes[i](number) >= median_value:
                     self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number) * value
         return self.query(number)
 
@@ -88,6 +87,10 @@ if __name__ == '__main__':
     cms.update(8,7)
     # cms.update(-5)
     cms.update(5,7)
-    print("query {}".format(cms.query(8)))
-    print("query {}".format(cms.query(5)))
+    cms.update(8, -2)
+    cms.update(6, -20)
+    cms.update(6, 15)
+    print("query {} {}".format(8, cms.query(8)))
+    print("query {} {}".format(5, cms.query(5)))
+    print("query {} {}".format(6, cms.query(6)))
     cms.print_cms()

@@ -6,6 +6,7 @@ import os
 import math
 from src.sketches.top_k import TopK, Node
 from sklearn.metrics import roc_auc_score
+from src.sketches.custom_count_min_sketch import CustomCountMinSketch
 import json
 
 np.random.seed(42)
@@ -16,7 +17,8 @@ class LogisticRegression(object):
         self.w = np.array([0] * self.D)
         self.b = 0
         self.learning_rate = 5e-1
-        self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
+        #self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
+        self.cms = CustomCountMinSketch(2, (1<<15) - 1)
         self.top_k = TopK(top_k_size)
         self.loss_val = 0
 
@@ -84,9 +86,9 @@ if __name__ == '__main__':
     labels, features = process_data(filePath)
     D = 47236
     feature_nums = [100*i for i in range(1, 201, 5)]
-    train_example_indexes = [np.random.choice(20242) for i in range(20000)]
+    train_example_indexes = [np.random.choice(20242) for i in range(20242)]
     train_example_labels = [labels[i] for i in train_example_indexes]
-    test_examples_indexes = [np.random.choice(20242) for i in range(15000)]
+    test_examples_indexes = [i for i in range(15000)]
     test_labels = [labels[i] for i in test_examples_indexes]
     true_test_labels = [int((i + 1) / 2) for i in test_labels]
     roc_score_list = []
@@ -110,7 +112,7 @@ if __name__ == '__main__':
             test_predicted_label.append(predicted_label)
         roc_score = roc_auc_score(true_test_labels, test_predicted_label)
         roc_score_list.append(roc_score)
-    with open("roc_score.json", 'w') as f:
+    with open("roc_score_custom_cms_2_hash_1_15.json", 'w') as f:
         f.write(json.dumps(roc_score_list))
     with open("features_list.json", 'w') as f:
         f.write(json.dumps(feature_nums))

@@ -10,10 +10,9 @@ from src.sketches.top_k import TopK, Node
 class LogisticRegression(object):
     def __init__(self, num_features):
         self.D = num_features
-        self.w = np.array([0] * self.D)
-        self.b = 0
         self.learning_rate = 5e-1
-        self.cms = CustomCountMinSketch(3, int(np.log(self.D) ** 2 / 3))
+        # self.cms = CustomCountMinSketch(3, int(np.log(self.D) ** 2 / 3))
+        self.cms = CustomCountMinSketch(3, (1 << 18) - 1)
         self.top_k = TopK(1 << 14 - 1)
 
     def sigmoid(self, x):
@@ -74,7 +73,7 @@ if __name__ == '__main__':
     D = 47236
     lgr = LogisticRegression(num_features=D)
     print("len of labels {}".format(len(labels)))
-    for epoch in range(0, 10):
+    for epoch in range(0, 1):
         print("epoch {}".format(epoch))
         for i in range(len(labels)):
             print("i {}".format(i))
@@ -90,7 +89,7 @@ if __name__ == '__main__':
     # test_labels, test_features = process_data(test_filePath)
     # print("test labels {}".format(test_labels))
     correct = 0
-    for i in range(3000):
+    for i in range(len(labels)):
         true_label = int((labels[i] + 1) / 2)
         test_example = features[i]
         feature_pos = [item[0] for item in test_example]
