@@ -17,10 +17,13 @@ class LogisticRegression(object):
         self.top_k = TopK(1 << 14 - 1)
 
     def sigmoid(self, x):
-        return 1.0 / (1.0 + math.exp(-x))
+        if x >= 0:
+            return 1. / (1. + np.exp(-x))
+        else:
+            return np.exp(x) / (1. + np.exp(x))
 
     def loss(self, y, p):
-        return y * math.log(p) + (1 - y) * math.log(1 - p)
+        return -(y * math.log(p) + (1 - y) * math.log(1 - p))
 
     def train(self, X, y):
         y_hat = np.dot(X, self.w) + self.b
@@ -47,6 +50,8 @@ class LogisticRegression(object):
         normalized_weights = (logit - min_logit) / (max_logit - min_logit)
         print("normalized weights {}".format(normalized_weights))
         sigm_val = self.sigmoid(normalized_weights)
+        if sigm_val == 1.0:
+            sigm_val = sigm_val - (1e-5)
         print("label {} sigmoid {}".format(label, sigm_val))
         loss = self.loss(y=label, p=sigm_val)
         gradient = (label - sigm_val)
@@ -98,9 +103,9 @@ if __name__ == '__main__':
     D = 47236
     lgr = LogisticRegression(num_features=D)
     print("len of labels {}".format(len(labels)))
-    for epoch in range(0, 3):
+    for epoch in range(0, 1):
         print("epoch {}".format(epoch))
-        for i in range(1000):
+        for i in range(len(labels)):
             print("i {}".format(i))
             label = labels[i]
             label = (1 + label) / 2

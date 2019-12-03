@@ -22,20 +22,13 @@ class LogisticRegression(object):
     def loss(self, y, p):
         return y * math.log(p) + (1 - y) * math.log(1 - p)
 
-    def train(self, X, y):
-        y_hat = np.dot(X, self.w) + self.b
-        loss = self.loss(y, self.sigmoid(y_hat))
-        dw, db = self.gradient(self.w, y, X, self.b)
-        self.w = self.w - self.learning_rate * dw
-        self.b = self.b - self.learning_rate * db
-
     def train_with_sketch(self, feature_pos, features, label):
         logit = 0
         min_logit = float("inf")
         max_logit = float("-inf")
         for i in range(len(feature_pos)):
             # print("top k at pos {} value {}".format(feature_pos[i], self.top_k.get_item(feature_pos[i])))
-            val = self.top_k.get_item(feature_pos[i]) * features[i]
+            val = self.top_k.get_value_for_key(feature_pos[i]) * features[i]
             if val > max_logit:
                 max_logit = val
             if val < min_logit:
@@ -55,38 +48,18 @@ class LogisticRegression(object):
                 # updating the change only on previous values
                 updated_val = self.learning_rate * gradient * features[i]
                 value = self.cms.update(feature_pos[i], updated_val)
-                self.top_k.push_item(Node(feature_pos[i], value))
+                self.top_k.push(Node(feature_pos[i], value))
         return loss
 
     def predict(self, feature_pos, feature_val):
         logit = 0
         for i in range(len(feature_pos)):
-            logit += self.top_k.get_item(feature_pos[i]) * feature_val[i]
+            logit += self.top_k.get_value_for_key(feature_pos[i]) * feature_val[i]
         a = self.sigmoid(logit)
         if a > 0.5:
             return 1
         else:
             return 0
-
-    def gradient_using_sketch(self, X):
-        for i in range(self.D):
-            self.cms.update(i, self.w[i])
-        dw, db = self.gradient(self.w, y, X, self.b)
-        for i in range(self.D):
-            self.cms.update(i, dw[i])
-        # todo: update in top K
-
-    def fit(self, X, y):
-        num_features = X.shape[1]
-        initial_wcb = np.zeros(shape=(2 * X.shape[1] + 1,))
-        params, min_val_obj, grads = fmin_l_bfgs_b(func=self.objective,
-                                                   args=(X, y), x0=initial_wcb,
-                                                   disp=10,
-                                                   maxiter=500,
-                                                   fprime=self.objective_grad)
-        print("params {}".format(params))
-        print("min val obj {}".format(min_val_obj))
-        print("grads dict {}".format(grads))
 
 
 if __name__ == '__main__':

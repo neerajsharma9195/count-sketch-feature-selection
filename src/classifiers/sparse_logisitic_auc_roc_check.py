@@ -5,17 +5,19 @@ from src.processing.parse_data import process_data
 import os
 import math
 from src.sketches.top_k import TopK, Node
+from sklearn.metrics import roc_auc_score
+import json
 
+np.random.seed(42)
 
 class LogisticRegression(object):
-    def __init__(self, num_features):
+    def __init__(self, num_features, top_k_size):
         self.D = num_features
         self.w = np.array([0] * self.D)
         self.b = 0
         self.learning_rate = 5e-1
-        self.mu = 0.0001
         self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
-        self.top_k = TopK((1 << 14) - 1)
+        self.top_k = TopK(top_k_size)
         self.loss_val = 0
 
     def sigmoid(self, x):
@@ -26,13 +28,6 @@ class LogisticRegression(object):
 
     def loss(self, y, p):
         return - (y * math.log(p) + (1 - y) * math.log(1 - p))
-
-    def train(self, X, y):
-        y_hat = np.dot(X, self.w) + self.b
-        loss = self.loss(y, self.sigmoid(y_hat))
-        dw, db = self.gradient(self.w, y, X, self.b)
-        self.w = self.w - self.learning_rate * dw
-        self.b = self.b - self.learning_rate * db
 
     def train_with_sketch(self, feature_pos, features, label):
         logit = 0
@@ -78,30 +73,7 @@ class LogisticRegression(object):
         for i in range(len(feature_pos)):
             logit += self.top_k.get_value_for_key(feature_pos[i]) * feature_val[i]
         a = self.sigmoid(logit)
-        if a > 0.5:
-            return 1
-        else:
-            return 0
-
-    def gradient_using_sketch(self, X):
-        for i in range(self.D):
-            self.cms.update(i, self.w[i])
-        dw, db = self.gradient(self.w, y, X, self.b)
-        for i in range(self.D):
-            self.cms.update(i, dw[i])
-        # todo: update in top K
-
-    def fit(self, X, y):
-        num_features = X.shape[1]
-        initial_wcb = np.zeros(shape=(2 * X.shape[1] + 1,))
-        params, min_val_obj, grads = fmin_l_bfgs_b(func=self.objective,
-                                                   args=(X, y), x0=initial_wcb,
-                                                   disp=10,
-                                                   maxiter=500,
-                                                   fprime=self.objective_grad)
-        print("params {}".format(params))
-        print("min val obj {}".format(min_val_obj))
-        print("grads dict {}".format(grads))
+        return a
 
 
 if __name__ == '__main__':
@@ -111,60 +83,61 @@ if __name__ == '__main__':
     filePath = os.path.join(data_directory_path, fileName)
     labels, features = process_data(filePath)
     D = 47236
-    # features = np.load(os.path.join(data_directory_path, "mnistdata_train.npy"))
-    # labels = np.load(os.path.join(data_directory_path, "mnistdata_label.npy"))
-    # print("x shape {}".format(features.shape))
-    # print("y shape {}".format(labels.shape))
-    lgr = LogisticRegression(num_features=D)
-    # print("len of labels {}".format(len(labels)))
-    # print("len of labels {}".format(len(labels)))
-    # for i in range(1000):
-    #     print(i)
-    #     label = labels[i]
-    #     example_feature = features[i]
-    #     rangeoffeatures = [i for i in range(len(features[i]))]
-    #     loss = lgr.train_with_sketch(rangeoffeatures, features[i], label)
-    #     print("loss {}".format(loss))
-    # correct = 0
-    # print(lgr.top_k.print_heap())
-    # for i in range(50, 80):
-    #     test_example = features[i]
-    #     rangeoffeatures = [i for i in range(len(features[i]))]
-    #     pred_label = lgr.predict(rangeoffeatures, features[i])
-    #     if pred_label == labels[i]:
-    #         correct += 1
-    for epoch in range(0, 10):
-        print("epoch {}".format(epoch))
-        for i in range(len(labels)):
-            print("i {}".format(i))
-            label = labels[i]
+    feature_nums = [100*i for i in range(1, 201, 5)]
+    train_example_indexes = [np.random.choice(20242) for i in range(20000)]
+    train_example_labels = [labels[i] for i in train_example_indexes]
+    test_examples_indexes = [np.random.choice(20242) for i in range(15000)]
+    test_labels = [labels[i] for i in test_examples_indexes]
+    true_test_labels = [int((i + 1) / 2) for i in test_labels]
+    roc_score_list = []
+    for n_feature in feature_nums:
+        lgr = LogisticRegression(num_features=D, top_k_size=n_feature)
+        test_predicted_label = []
+        for epoch in range(len(train_example_indexes)):
+            print("i {}".format(epoch))
+            label = train_example_labels[epoch]
             label = (1 + label) / 2
-            example_features = features[i]
+            example_features = features[train_example_indexes[epoch]]
             feature_pos = [item[0] for item in example_features]
             feature_vals = [item[1] for item in example_features]
             loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
             print("loss {}".format(loss))
-        print("total loss after epoch {} is {}".format(i, lgr.loss_val))
-    # # test_fileName = "rcv1_test.binary"
-    # # test_filePath = os.path.join(data_directory_path, test_fileName)
-    # # test_labels, test_features = process_data(test_filePath)
-    # # print("test labels {}".format(test_labels))
-    print("printing heap")
-    with open("topk_results.txt", 'w') as f:
-        for item in lgr.top_k.heap:
-            key = lgr.top_k.keys[item.value]
-            value = lgr.top_k.features[key]
-            f.write("{}:{}\n".format(key, value))
-    correct = 0
-    for i in range(5000):
-        true_label = int((labels[i] + 1) / 2)
-        test_example = features[i]
-        feature_pos = [item[0] for item in test_example]
-        feature_vals = [item[1] for item in test_example]
-        pred_label = lgr.predict(feature_pos, feature_vals)
-        if pred_label == true_label:
-            correct += 1
-    print("correctly classified test examples {}".format(correct))
+        for i in range(len(test_labels)):
+            test_example = features[test_examples_indexes[i]]
+            test_feature_pos = [item[0] for item in test_example]
+            test_feature_vals = [item[1] for item in test_example]
+            predicted_label = lgr.predict(test_feature_pos, test_feature_vals)
+            test_predicted_label.append(predicted_label)
+        roc_score = roc_auc_score(true_test_labels, test_predicted_label)
+        roc_score_list.append(roc_score)
+    with open("roc_score.json", 'w') as f:
+        f.write(json.dumps(roc_score_list))
+    with open("features_list.json", 'w') as f:
+        f.write(json.dumps(feature_nums))
+
+
+
+
+    #     print("total loss after epoch {} is {}".format(i, lgr.loss_val))
+    # # # test_fileName = "rcv1_test.binary"
+    # # # test_filePath = os.path.join(data_directory_path, test_fileName)
+    # # # test_labels, test_features = process_data(test_filePath)
+    # # # print("test labels {}".format(test_labels))
+    # print("printing heap")
+    # lgr.top_k.print_heap()
+    # with open("topk_results.txt", 'w') as f:
+    #     for item in lgr.top_k.heap:
+    #         f.write("{}:{}\n".format(item.key, item.value))
+    # correct = 0
+    # for i in range(1000):
+    #     true_label = int((labels[i] + 1) / 2)
+    #     test_example = features[i]
+    #     feature_pos = [item[0] for item in test_example]
+    #     feature_vals = [item[1] for item in test_example]
+    #     pred_label = lgr.predict(feature_pos, feature_vals)
+    #     if pred_label == true_label:
+    #         correct += 1
+    # print("correctly classified test examples {}".format(correct))
 
 
     # n, d = X.shape
