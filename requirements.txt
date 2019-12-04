@@ -2,5 +2,5 @@ numpy
 scipy
 scikit-learn
 matplotlib
-torch
-torchvision
+guppy3
+memory_profiler

@@ -5,15 +5,13 @@ from src.processing.parse_data import process_data
 import os
 import math
 from src.sketches.top_k import TopK, Node
-
+from guppy import hpy
+import time
 
 class LogisticRegression(object):
     def __init__(self, num_features):
         self.D = num_features
-        #self.w = np.array([0] * self.D)
-        self.b = 0
         self.learning_rate = 5e-1
-        self.mu = 0.0001
         self.cms = CountSketch(3, (1<<18) - 1)
         #self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
         self.top_k = TopK((1 << 14) - 1)
@@ -56,8 +54,8 @@ class LogisticRegression(object):
         normalized_weights = (logit - min_logit) / (max_logit - min_logit)
         print("normalized weights {}".format(normalized_weights))
         sigm_val = self.sigmoid(normalized_weights)
-        if sigm_val == 1.0:
-            sigm_val = sigm_val - (1e-5)
+        # if sigm_val == 1.0:
+        #     sigm_val = sigm_val - (1e-5)
         print("label {} sigmoid {}".format(label, sigm_val))
         gradient = (label - sigm_val)
         loss = self.loss(y=label, p=sigm_val)
@@ -106,34 +104,15 @@ class LogisticRegression(object):
 
 
 if __name__ == '__main__':
+    h = hpy()
     current_directory = (os.path.dirname(__file__))
     data_directory_path = os.path.join(current_directory, '..', 'data')
     fileName = "rcv1_train.binary"
     filePath = os.path.join(data_directory_path, fileName)
     labels, features = process_data(filePath)
     D = 47236
-    # features = np.load(os.path.join(data_directory_path, "mnistdata_train.npy"))
-    # labels = np.load(os.path.join(data_directory_path, "mnistdata_label.npy"))
-    # print("x shape {}".format(features.shape))
-    # print("y shape {}".format(labels.shape))
     lgr = LogisticRegression(num_features=D)
-    # print("len of labels {}".format(len(labels)))
-    # print("len of labels {}".format(len(labels)))
-    # for i in range(1000):
-    #     print(i)
-    #     label = labels[i]
-    #     example_feature = features[i]
-    #     rangeoffeatures = [i for i in range(len(features[i]))]
-    #     loss = lgr.train_with_sketch(rangeoffeatures, features[i], label)
-    #     print("loss {}".format(loss))
-    # correct = 0
-    # print(lgr.top_k.print_heap())
-    # for i in range(50, 80):
-    #     test_example = features[i]
-    #     rangeoffeatures = [i for i in range(len(features[i]))]
-    #     pred_label = lgr.predict(rangeoffeatures, features[i])
-    #     if pred_label == labels[i]:
-    #         correct += 1
+    start_time = time.time()
     for epoch in range(0, 1):
         print("epoch {}".format(epoch))
         for i in range(len(labels)):
@@ -145,17 +124,12 @@ if __name__ == '__main__':
             feature_vals = [item[1] for item in example_features]
             loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
             print("loss {}".format(loss))
-        print("total loss after epoch {} is {}".format(i, lgr.loss_val))
+    end_time = time.time()
     test_fileName = "rcv1_test.binary"
     test_filePath = os.path.join(data_directory_path, test_fileName)
     test_labels, test_features = process_data(test_filePath)
     print("test labels size {}".format(len(test_labels)))
     print("printing heap")
-    with open("topk_results.txt", 'w') as f:
-        for item in lgr.top_k.heap:
-            key = lgr.top_k.keys[item.value]
-            value = lgr.top_k.features[key]
-            f.write("{}:{}\n".format(key, value))
     correct = 0
     for i in range(len(test_labels)):
         print('test example {}'.format(i))
@@ -167,15 +141,7 @@ if __name__ == '__main__':
         if pred_label == true_label:
             correct += 1
     print("correctly classified test examples {}".format(correct))
+    x = h.heap()
+    print("total memory {}".format(x.size))
+    print("total time taken {}".format(end_time-start_time))
 
-
-    # n, d = X.shape
-    # logistic = LogisticRegression(n, d)
-    # print(X.shape, y.shape)
-    # for i in range(n):
-    #     logistic.train(X[i], y[i])
-    # output = [logistic.predict(X[i]) for i in range(n)]
-    # print(sum(output == y) / n)
-    # n_t, d_t = X_test.shape
-    # output = [logistic.predict(X_test[i]) for i in range(n_t)]
-    # print(sum(output == y_test) / n_t)

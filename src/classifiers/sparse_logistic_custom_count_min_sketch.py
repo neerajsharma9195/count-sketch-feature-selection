@@ -5,6 +5,8 @@ from src.processing.parse_data import process_data
 import os
 import math
 from src.sketches.top_k import TopK, Node
+from guppy import hpy
+import time
 
 
 class LogisticRegression(object):
@@ -12,7 +14,7 @@ class LogisticRegression(object):
         self.D = num_features
         self.learning_rate = 5e-1
         # self.cms = CustomCountMinSketch(3, int(np.log(self.D) ** 2 / 3))
-        self.cms = CustomCountMinSketch(3, (1 << 18) - 1)
+        self.cms = CustomCountMinSketch(2, (1 << 18) - 1)
         self.top_k = TopK(1 << 14 - 1)
 
     def sigmoid(self, x):
@@ -65,6 +67,7 @@ class LogisticRegression(object):
 
 
 if __name__ == '__main__':
+    h = hpy()
     current_directory = (os.path.dirname(__file__))
     data_directory_path = os.path.join(current_directory, '..', 'data')
     fileName = "rcv1_train.binary"
@@ -73,6 +76,7 @@ if __name__ == '__main__':
     D = 47236
     lgr = LogisticRegression(num_features=D)
     print("len of labels {}".format(len(labels)))
+    start_time = time.time()
     for epoch in range(0, 1):
         print("epoch {}".format(epoch))
         for i in range(len(labels)):
@@ -84,6 +88,7 @@ if __name__ == '__main__':
             feature_vals = [item[1] for item in example_features]
             loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
             print("loss {}".format(loss))
+    end_time = time.time()
     test_fileName = "rcv1_test.binary"
     test_filePath = os.path.join(data_directory_path, test_fileName)
     test_labels, test_features = process_data(test_filePath)
@@ -99,3 +104,6 @@ if __name__ == '__main__':
         if pred_label == true_label:
             correct += 1
     print("correctly classified test examples {}".format(correct))
+    x = h.heap()
+    print("total memory {}".format(x.size))
+    print("total time taken {}".format(end_time - start_time))
