@@ -8,12 +8,13 @@ from src.sketches.top_k import TopK, Node
 from guppy import hpy
 import time
 
+
 class LogisticRegression(object):
     def __init__(self, num_features):
         self.D = num_features
         self.learning_rate = 5e-1
-        self.cms = CountSketch(3, (1<<18) - 1)
-        #self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
+        self.cms = CountSketch(3, (1 << 18) - 1)
+        # self.cms = CountSketch(3, int(np.log(self.D) ** 2 / 3))
         self.top_k = TopK((1 << 14) - 1)
         self.loss_val = 0
 
@@ -111,6 +112,7 @@ if __name__ == '__main__':
     filePath = os.path.join(data_directory_path, fileName)
     labels, features = process_data(filePath)
     D = 47236
+    lr = []
     lgr = LogisticRegression(num_features=D)
     start_time = time.time()
     for epoch in range(0, 1):
@@ -143,5 +145,4 @@ if __name__ == '__main__':
     print("correctly classified test examples {}".format(correct))
     x = h.heap()
     print("total memory {}".format(x.size))
-    print("total time taken {}".format(end_time-start_time))
-
+    print("total time taken {}".format(end_time - start_time))

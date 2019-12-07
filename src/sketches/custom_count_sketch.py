@@ -5,7 +5,6 @@ from src.utils.utils import isPrime
 
 class CustomCountSketch(object):
     def __init__(self, h, w):
-        random.seed(42)
         self.num_hash = h
         self.bucket_size = w
         self.countsketch = [[0 for i in range(self.bucket_size)] for j in range(h)]

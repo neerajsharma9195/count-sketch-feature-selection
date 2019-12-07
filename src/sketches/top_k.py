@@ -105,7 +105,7 @@ class TopK(object):
         for item in self.heap:
             key = self.keys[item.value]
             value = self.features[key]
-            print(item.value, item.key)
+            print(key, value)
 
 
 if __name__ == '__main__':

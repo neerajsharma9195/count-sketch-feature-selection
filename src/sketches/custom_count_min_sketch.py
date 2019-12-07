@@ -23,8 +23,8 @@ class CustomCountMinSketch(object):
         '''
         first_hash_function = lambda number: ((self.first_nums[0] * number + self.second_nums[0]) % self.ps[0]) % w
         second_hash_function = lambda number: ((self.first_nums[1] * number + self.second_nums[1]) % self.ps[1]) % w
-        #third_hash_function = lambda number: ((self.first_nums[2] * number + self.second_nums[2]) % self.ps[2]) % w
-        self.hashes = [first_hash_function, second_hash_function] #, third_hash_function]
+        # third_hash_function = lambda number: ((self.first_nums[2] * number + self.second_nums[2]) % self.ps[2]) % w
+        self.hashes = [first_hash_function, second_hash_function] # , third_hash_function]
 
     def get_hash_values(self, number):
         return [(i, self.first_nums[i], self.second_nums[i], self.hashes[i](number)) for i in range(len(self.hashes))]
@@ -59,7 +59,7 @@ class CustomCountMinSketch(object):
             poses.append(self.countSketchPos[i][hash_func(number)])
             negs.append(self.countSketchNeg[i][hash_func(number)])
         resp = min(poses) - max(negs)
-        #print("resp for query number {} {}".format(number, resp))
+        # print("resp for query number {} {}".format(number, resp))
         return resp
 
 
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     cms.update(8, 1)
     cms.update(8, 0.1)
     cms.update(8, - 0.1)
-    #cms.update(5)
+    # cms.update(5)
     cms.update(1, 1)
     cms.update(2, 1)
     print("query {}".format(cms.query(8)))

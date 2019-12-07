@@ -8,7 +8,6 @@ class CountSketch(object):
         self.num_hash = h
         self.bucket_size = w
         self.countsketch = [[0 for i in range(self.bucket_size)] for j in range(h)]
-        random.seed(42)
         self.first_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
         self.second_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
         self.sign_firsts = [random.randint(1, 1000) for i in range(self.num_hash)]
