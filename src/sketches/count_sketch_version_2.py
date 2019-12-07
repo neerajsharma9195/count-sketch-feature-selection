@@ -1,13 +1,15 @@
 import statistics as s
 import random
 from src.utils.utils import isPrime
+import numpy as np
 
 
-class CountSketch(object):
+class CustomCountSketch(object):
     def __init__(self, h, w):
         self.num_hash = h
         self.bucket_size = w
-        self.countsketch = [[0 for i in range(self.bucket_size)] for j in range(h)]
+        self.countsketch = np.array([np.array([0 for i in range(w)]) for j in range(h)])
+        random.seed(42)
         self.first_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
         self.second_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
         self.sign_firsts = [random.randint(1, 1000) for i in range(self.num_hash)]
@@ -57,43 +59,38 @@ class CountSketch(object):
         return [(i, self.first_nums[i], self.second_nums[i], self.hashes[i](number)) for i in range(len(self.hashes))]
 
     def update(self, number, value):
-        values = []
-        for i in range(self.num_hash):
-            sign = self.signhashes[i](number)
-            self.countsketch[i][self.hashes[i](number)] += sign*value
-            values.append(sign * self.countsketch[i][self.hashes[i](number)])
-        return s.median(values)
-
-    def conservative_update(self, number):
-        median_value = self.query(number)
-        print("median value {} when conservative update for number {}".format(median_value, number))
+        median_value = [np.median(self.countsketch[i]) for i in range(self.num_hash)]
+        # print("median value {} when conservative update for number {}".format(median_value, number))
         # todo: check if number > 0 then should we use <= or just < sign for Median value
         for i in range(self.num_hash):
-            if number > 0:
-                if self.countsketch[i][self.hashes[i](number)] <= median_value:
-                    self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number)
-            else:
-                if self.countsketch[i][self.hashes[i](number)] > median_value:
-                    self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number)
+            if value > 0 and value <= median_value[i]:
+                #if self.countsketch[i][self.hashes[i](number)] <= median_value[i]:
+                self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number) * value
+            elif value <= 0 and value >= median_value[i]:
+                self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number) * value
+            # else:
+            #     if self.countsketch[i][self.hashes[i](number)] > median_value[i]:
+
+        return self.query(number)
 
     def print_cms(self):
         print(self.countsketch)
 
     def query(self, number):
-        return s.median(
+        return np.median(
             [self.countsketch[i][self.hashes[i](number)] * self.signhashes[i](number) for i in range(self.num_hash)])
 
 
 if __name__ == '__main__':
-    cms = CountSketch(3, 10)
+    cms = CustomCountSketch(3, 10)
     print(cms.get_hash_values(9))
-    cms.conservative_update(8)
-    # cms.conservative_update(-8)
-    cms.conservative_update(8)
-    # cms.conservative_update(-8)
-    cms.conservative_update(8)
-    # cms.conservative_update(-5)
-    cms.conservative_update(5)
+    cms.update(8,10)
+    # cms.update(-8)
+    cms.update(8,8)
+    # cms.update(-8)
+    cms.update(8,7)
+    # cms.update(-5)
+    cms.update(5,7)
     print("query {}".format(cms.query(8)))
     print("query {}".format(cms.query(5)))
     cms.print_cms()

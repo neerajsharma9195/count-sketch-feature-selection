@@ -7,8 +7,7 @@ class CustomCountSketch(object):
     def __init__(self, h, w):
         self.num_hash = h
         self.bucket_size = w
-        self.countsketch = [[0 for i in range(w)] for j in range(h)]
-        random.seed(42)
+        self.countsketch = [[0 for i in range(self.bucket_size)] for j in range(h)]
         self.first_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
         self.second_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
         self.sign_firsts = [random.randint(1, 1000) for i in range(self.num_hash)]
@@ -57,17 +56,18 @@ class CustomCountSketch(object):
     def get_hash_values(self, number):
         return [(i, self.first_nums[i], self.second_nums[i], self.hashes[i](number)) for i in range(len(self.hashes))]
 
-    def update(self, number):
+    def update(self, number, value):
         median_value = self.query(number)
-        print("median value {} when conservative update for number {}".format(median_value, number))
+        # print("median value {} when conservative update for number {}".format(median_value, number))
         # todo: check if number > 0 then should we use <= or just < sign for Median value
         for i in range(self.num_hash):
-            if number > 0:
-                if self.countsketch[i][self.hashes[i](number)] <= median_value:
-                    self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number)
+            if value > 0:
+                if self.countsketch[i][self.hashes[i](number)]*self.signhashes[i](number) <= median_value:
+                    self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number) * value
             else:
-                if self.countsketch[i][self.hashes[i](number)] > median_value:
-                    self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number)
+                if self.countsketch[i][self.hashes[i](number)]*self.signhashes[i](number) >= median_value:
+                    self.countsketch[i][self.hashes[i](number)] += self.signhashes[i](number) * value
+        return self.query(number)
 
     def print_cms(self):
         print(self.countsketch)
@@ -80,13 +80,17 @@ class CustomCountSketch(object):
 if __name__ == '__main__':
     cms = CustomCountSketch(3, 10)
     print(cms.get_hash_values(9))
-    cms.update(8)
+    cms.update(8,10)
     # cms.update(-8)
-    cms.update(8)
+    cms.update(8,8)
     # cms.update(-8)
-    cms.update(8)
+    cms.update(8,7)
     # cms.update(-5)
-    cms.update(5)
-    print("query {}".format(cms.query(8)))
-    print("query {}".format(cms.query(5)))
+    cms.update(5,7)
+    cms.update(8, -2)
+    cms.update(6, -20)
+    cms.update(6, 15)
+    print("query {} {}".format(8, cms.query(8)))
+    print("query {} {}".format(5, cms.query(5)))
+    print("query {} {}".format(6, cms.query(6)))
     cms.print_cms()
