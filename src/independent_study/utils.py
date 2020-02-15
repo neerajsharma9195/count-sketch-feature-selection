@@ -1,6 +1,3 @@
-
-
-
 def get_top_k_positions(top_k_file):
     with open(top_k_file, 'r') as f:
         topk_data = f.readlines()
@@ -10,6 +7,6 @@ def get_top_k_positions(top_k_file):
         return positions
 
 
-
 if __name__ == '__main__':
-    get_top_k_positions("/src/independent_study/results/topk_features_2000.txt")
+    all_positions = get_top_k_positions("results/topk_features_8000.txt")
+    print(all_positions[0:100])

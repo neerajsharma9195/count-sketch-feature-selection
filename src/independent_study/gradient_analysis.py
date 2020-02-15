@@ -45,14 +45,14 @@ class LogisticRegression(object):
         sigm_val = self.sigmoid(normalized_weights)
         print("label {} sigmoid {}".format(label, sigm_val))
         loss = self.loss(y=label, p=sigm_val)
-        gradient = (label - sigm_val)
-        if gradient != 0:
+        diff_label = (label - sigm_val) # difference in label
+        if diff_label != 0:
             for i in range(len(feature_pos)):
                 # updating the change only on previous values
-                updated_val = self.learning_rate * gradient * features[i]
-                if i in self.top_k_dict.keys():
-                    self.top_k_dict[i].append(updated_val)
-                value = self.cms.update(feature_pos[i], updated_val)
+                grad_update = self.learning_rate * diff_label * features[i]
+                if feature_pos[i] in self.top_k_dict.keys():
+                    self.top_k_dict[feature_pos[i]].append(grad_update)
+                value = self.cms.update(feature_pos[i], grad_update)
                 self.top_k.push(Node(feature_pos[i], value))
         return loss
 
@@ -116,8 +116,7 @@ if __name__ == '__main__':
     correctly_classified_examples.append(correct)
     print("correct examples {}".format(correctly_classified_examples))
     with open(
-            '/src/independent_study/results/topk_features_8000.txt',
-            'w') as f:
+            'results/topk_features_8000.txt', 'w') as f:
         for item in lgr.top_k.heap:
             key = lgr.top_k.keys[item.value]
             value = lgr.top_k.features[key]
