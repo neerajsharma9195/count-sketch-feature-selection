@@ -1,5 +1,5 @@
 import numpy as np
-from src.sketches.custom_count_min_sketch import CustomCountMinSketch
+from src.sketches.conservative_count_min_sketch import ConservativeCountMinSketch
 from src.processing.parse_data import process_data
 import os
 import math
@@ -12,7 +12,7 @@ import json
 class LogisticRegression(object):
     def __init__(self, count_sketch_size, top_k, top_k_dict={}):
         self.learning_rate = 0.5
-        self.cms = CustomCountMinSketch(2, count_sketch_size)
+        self.cms = ConservativeCountMinSketch(2, count_sketch_size)
         self.top_k = TopK(top_k)
         self.top_k_dict = top_k_dict
 
@@ -27,22 +27,11 @@ class LogisticRegression(object):
 
     def train_with_sketch(self, feature_pos, features, label):
         logit = 0
-        min_logit = float("inf")
-        max_logit = float("-inf")
         for i in range(len(feature_pos)):
             # print("top k at pos {} value {}".format(feature_pos[i], self.top_k.get_item(feature_pos[i])))
             val = self.top_k.get_value_for_key(feature_pos[i]) * features[i]
-            if val > max_logit:
-                max_logit = val
-            if val < min_logit:
-                min_logit = val
             logit += val
-        if max_logit - min_logit == 0:
-            max_logit = 1
-            min_logit = 0
-        normalized_weights = (logit - min_logit) / (max_logit - min_logit)
-        print("normalized weights {}".format(normalized_weights))
-        sigm_val = self.sigmoid(normalized_weights)
+        sigm_val = self.sigmoid(logit)
         print("label {} sigmoid {}".format(label, sigm_val))
         loss = self.loss(y=label, p=sigm_val)
         diff_label = (label - sigm_val) # difference in label
@@ -78,7 +67,7 @@ if __name__ == '__main__':
     test_filePath = os.path.join(data_directory_path, test_fileName)
     test_labels, test_features = process_data(test_filePath)
     print("test labels size {}".format(len(test_labels)))
-    count_sketch_size = 11000
+    count_sketch_size = 12000
     print("len of labels {}".format(len(labels)))
     correctly_classified_examples = []
     D = 47236
@@ -99,7 +88,7 @@ if __name__ == '__main__':
             feature_vals = [item[1] for item in example_features]
             loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
             print("loss {}".format(loss))
-    with open("results/topk_feature_gradients_all_topk_8000.json", 'w') as f:
+    with open("../results/topk_features_conservative_updates_count_min_all_topk_8000.json", 'w') as f:
          f.write(json.dumps(lgr.top_k_dict))
     end_time = time.time()
     correct = 0
@@ -115,9 +104,9 @@ if __name__ == '__main__':
     print("correctly classified test examples {}".format(correct))
     correctly_classified_examples.append(correct)
     print("correct examples {}".format(correctly_classified_examples))
-    with open(
-            'results/topk_features_8000.txt', 'w') as f:
-        for item in lgr.top_k.heap:
-            key = lgr.top_k.keys[item.value]
-            value = lgr.top_k.features[key]
-            f.write("{}:{}\n".format(key, value))
+    # with open(
+    #         'results/topk_features_8000.txt', 'w') as f:
+    #     for item in lgr.top_k.heap:
+    #         key = lgr.top_k.keys[item.value]
+    #         value = lgr.top_k.features[key]
+    #         f.write("{}:{}\n".format(key, value))
