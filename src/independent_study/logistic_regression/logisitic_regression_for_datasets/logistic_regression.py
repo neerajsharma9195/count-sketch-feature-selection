@@ -10,7 +10,7 @@ import datetime
 #There is no compression of gradients
 #All elements considered while next step during stochastic gradient descent
 
-class logisticRegression(object):
+class LogisticRegression(object):
     def __init__(self, dimensions, train_file,test_file):
         self.learning_rate = 0.5
         self.gradients = [0]*(dimensions+1)
@@ -30,9 +30,10 @@ class logisticRegression(object):
         return -(y * math.log(p) + (1 - y) * math.log(1 - p))
 
     def train(self, feature_pos, features, label):
+        val = 0
         for i in range(len(feature_pos)):
             # print("top k at pos {} value {}".format(feature_pos[i], self.top_k.get_item(feature_pos[i])))
-            val = self.gradients[feature_pos[i]] * features[i]
+            val += self.gradients[feature_pos[i]] * features[i]
         sigm_val = self.sigmoid(val)
         print("label {} sigmoid {}".format(label, sigm_val))
         loss = self.loss(y=label, p=sigm_val)
@@ -113,75 +114,21 @@ class logisticRegression(object):
         for i, gradient in enumerate(self.gradients):
             grad_list.append((i, gradient))
         topk = sorted(grad_list, key=lambda x: abs(x[1]), reverse=True)
-        print(topk[:8001])
-        with open(filename+str(datetime.datetime.now()), 'w') as f:
-            f.write(json.dumps(topk[:8001]))
+        dict_topK = {}
+        for num in enumerate(topk[:8001]):
+            dict_topK[num[0]]=num[1]
+        with open(filename+str(datetime.datetime.now())+".json", 'w') as f:
+            f.write(json.dumps(dict_topK))
 
     def dump_gradient_updates(self,filename):
-        with open(filename+str(datetime.datetime.now()), 'w') as f:
+        with open(filename+str(datetime.datetime.now())+".json", 'w') as f:
             f.write(json.dumps(self.gradient_updates_dict))
 
 
 if __name__ == '__main__':
-    lgr = logisticRegression(47326,"rcv1_train.binary","rcv1_test.binary")
+    lgr = LogisticRegression(47326,"rcv1_train.binary","rcv1_test.binary")
     lgr.train_dataset(1)
     lgr.accuracy_on_test()
-    lgr.dump_gradient_updates("../../dumps/logistic_regression_gradient_updates.json")
-    lgr.dump_top_K('../../dumps/top8000_logistic_regression.txt')
+    lgr.dump_top_K('../../dumps/top8000_logistic_regression')
+    #lgr.dump_gradient_updates("../../dumps/logistic_regression_gradient_updates")
 
-    '''
-    current_directory = (os.path.dirname(__file__))
-    data_directory_path = os.path.join(current_directory, '..','data')
-    fileName = "rcv1_train.binary"
-    print("data directory :", data_directory_path)
-    filePath = os.path.join(data_directory_path, fileName)
-    print("Filepath :",filePath)
-    labels, features = process_data(filePath)
-    print("len of labels {}".format(len(labels)))
-    test_fileName = "rcv1_test.binary"
-    test_filePath = os.path.join(data_directory_path, test_fileName)
-    test_labels, test_features = process_data(test_filePath)
-    print("test labels size {}".format(len(test_labels)))
-    count_sketch_size = 11000
-    print("len of labels {}".format(len(labels)))
-    correctly_classified_examples = []
-    D = 47236
-    time_taken = []
-    lgr = logistic_regression(D)
-    start_time = time.time()
-    for epoch in range(0, 1):
-        print("epoch {}".format(epoch))
-        for i in range(len(labels)):
-            print("i {}".format(i))
-            label = labels[i]
-            label = (1 + label) / 2
-            example_features = features[i]
-            feature_pos = [item[0] for item in example_features]
-            feature_vals = [item[1] for item in example_features]
-            loss = lgr.train(feature_pos, feature_vals, label)
-            print("loss {}".format(loss))
-    with open("results/all_feature_gradients_without_compression_all_topk_8000.json", 'w') as f:
-         f.write(json.dumps(lgr.gradient_updates_dict))
-    end_time = time.time()
-    correct = 0
-    for i in range(len(test_labels)):
-        print("{} test example".format(i))
-        true_label = int((test_labels[i] + 1) / 2)
-        test_example = test_features[i]
-        feature_pos = [item[0] for item in test_example]
-        feature_vals = [item[1] for item in test_example]
-        pred_label = lgr.predict(feature_pos, feature_vals)
-        if pred_label == true_label:
-            correct += 1
-    print("correctly classified test examples {}".format(correct))
-    correctly_classified_examples.append(correct)
-    print("correct examples {}".format(correctly_classified_examples))
-    grad_list =  []
-    for i, gradient in enumerate(lgr.gradients):
-        grad_list.append((i,gradient))
-    topk = sorted(grad_list, key=lambda x: abs(x[1]), reverse=True)
-    print(topk[:8001])
-    with open(
-            'results/topk_features_8000_gradient_without_compression.txt', 'w') as f:
-               f.write(json.dumps(topk[:8001]))
-    '''

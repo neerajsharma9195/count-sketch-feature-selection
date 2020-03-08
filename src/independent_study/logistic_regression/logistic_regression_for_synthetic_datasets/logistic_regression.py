@@ -30,8 +30,9 @@ class logisticRegression(object):
         return -(y * math.log(p) + (1 - y) * math.log(1 - p))
 
     def train(self, example, label):
+        val = 0
         for i in range(len(example)):
-            val = self.recovered_weight[i] * example[i]
+            val+= self.recovered_weight[i] * example[i]
         sigm_val = self.sigmoid(val)
         #print("label {} sigmoid {}".format(label, sigm_val))
         loss = self.loss(y=label, p=sigm_val)
@@ -93,14 +94,15 @@ class logisticRegression(object):
 
 
 if __name__ == '__main__':
-    lgr = logisticRegression(100,100,3)
-    lgr.train_dataset(10)
+    lgr = logisticRegression(1000,1000,3)
+    lgr.train_dataset(1)
     lgr.accuracy_on_test()
-    lgr.dump_top_K('../../dumps/top8000_synthetic_logistic_regression.txt')
+    #lgr.dump_top_K('../../dumps/top8000_synthetic_logistic_regression.txt')
     print(lgr.sparsity)
     print(len(lgr.recovered_weight))
     print(len(lgr.weight))
     print(lgr.recovered_weight)
     print(lgr.weight)
     print(lgr.get_recovery_mse())
+    print(lgr.correctly_classified)
 
