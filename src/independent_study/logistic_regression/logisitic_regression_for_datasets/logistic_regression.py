@@ -115,7 +115,7 @@ class LogisticRegression(object):
             grad_list.append((i, gradient))
         topk = sorted(grad_list, key=lambda x: abs(x[1]), reverse=True)
         dict_topK = {}
-        for num in enumerate(topk[:8001]):
+        for i,num in enumerate(topk[:8001]):
             dict_topK[num[0]]=num[1]
         with open(filename+str(datetime.datetime.now())+".json", 'w') as f:
             f.write(json.dumps(dict_topK))
