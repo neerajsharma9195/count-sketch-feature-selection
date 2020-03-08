@@ -85,9 +85,9 @@ if __name__ == '__main__':
     top_k_dict = {k: [] for k in range(D)}
     # model params
     top_k_size = 8000
-    cms_type = "complementary_cms_conservative"
-    num_hashes = 2
-    count_sketch_size = 11000
+    cms_type = "mission_count_sketch"
+    num_hashes = 3
+    count_sketch_size = 16000
     lgr = LogisticRegression(cms_type=cms_type,
                              hash_func_counts=num_hashes,
                              count_sketch_size=count_sketch_size,
