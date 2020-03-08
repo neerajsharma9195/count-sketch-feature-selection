@@ -21,14 +21,15 @@ class TopKLogisticRegression(LogisticRegression):
         diff_label = (label - sigm_val)  # difference in label
         if diff_label != 0:
             for i in range(len(feature_pos)):
-                value=0
                 # updating the change only on previous values
-                if feature_pos[i] in self.top_k_dict.keys():
-                    updated_val = self.learning_rate * diff_label * features[i]
-                    self.gradient_updates_dict[feature_pos[i]].append(updated_val)
-                    self.gradients[feature_pos[i]] += updated_val
-                    value = self.gradients[feature_pos[i]]
-                self.top_k.push(Node(feature_pos[i], value))
+
+                for i in range(len(feature_pos)):
+                    # updating the change only on previous values
+                    grad_update = self.learning_rate * diff_label * features[i]
+                    if feature_pos[i] in self.top_k_dict.keys():
+                        self.gradient_updates_dict[feature_pos[i]].append(grad_update)
+                    self.gradients[feature_pos[i]] += grad_update
+                    self.top_k.push(Node(feature_pos[i],  self.gradients[feature_pos[i]]))
         return loss
 
     def dump_top_K(self, filename):
