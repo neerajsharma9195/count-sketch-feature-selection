@@ -22,19 +22,19 @@ class TopKLogisticRegression(LogisticRegression):
         if diff_label != 0:
             for i in range(len(feature_pos)):
                 # updating the change only on previous values
-
-                for i in range(len(feature_pos)):
-                    # updating the change only on previous values
-                    grad_update = self.learning_rate * diff_label * features[i]
-                    if feature_pos[i] in self.top_k_dict.keys():
-                        self.gradient_updates_dict[feature_pos[i]].append(grad_update)
-                    self.gradients[feature_pos[i]] += grad_update
-                    self.top_k.push(Node(feature_pos[i],  self.gradients[feature_pos[i]]))
+                grad_update = self.learning_rate * diff_label * features[i]
+                self.gradient_updates_dict[feature_pos[i]].append(grad_update)
+                self.gradients[feature_pos[i]] += grad_update
+                self.top_k.push(Node(feature_pos[i],  self.gradients[feature_pos[i]]))
         return loss
 
     def dump_top_K(self, filename):
         with open(filename + str(datetime.datetime.now())+".json", 'w') as f:
-            f.write(json.dumps(self.top_k_dict))
+            for item in self.top_k.heap:
+                key = self.top_k.keys[item.value]
+                value = self.top_k.features[key]
+                f.write("{}:{}\n".format(key, value))
+
 
 
 if __name__ == '__main__':
