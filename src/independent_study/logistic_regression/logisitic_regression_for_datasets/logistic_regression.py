@@ -15,7 +15,7 @@ class LogisticRegression(object):
         self.learning_rate = 0.5
         self.gradients = [0]*(dimensions+1)
         self.dimensions = dimensions
-        self.gradient_updates_dict = collections.defaultdict(list)
+        self.gradient_updates_dict = {k: [] for k in range(1, dimensions+1)}
         self.train_file = train_file
         self.test_file = test_file
         self.correctly_classified = 0
@@ -130,5 +130,5 @@ if __name__ == '__main__':
     lgr.train_dataset(1)
     lgr.accuracy_on_test()
     lgr.dump_top_K('../../dumps/top8000_logistic_regression')
-    #lgr.dump_gradient_updates("../../dumps/logistic_regression_gradient_updates")
+    lgr.dump_gradient_updates("../../dumps/logistic_regression_gradient_updates")
 
