@@ -30,9 +30,6 @@ class SyntheticDatasetGeneration:
         self.noisy_labels = [self.adding_noise(np.dot(example, self.weight)) for example in self.samples]
 
     def create_true_labels(self):
-        for example in self.samples:
-            print(len(example))
-            break
         self.true_labels = [self.without_noise(np.dot(example, self.weight)) for example in self.samples]
 
     def adding_noise(self, x):
