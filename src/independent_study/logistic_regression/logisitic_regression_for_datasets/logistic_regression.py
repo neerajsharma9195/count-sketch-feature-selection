@@ -10,6 +10,7 @@ import datetime
 #There is no compression of gradients
 #All elements considered while next step during stochastic gradient descent
 
+
 class LogisticRegression(object):
     def __init__(self, dimensions, train_file,test_file):
         self.learning_rate = 0.5
@@ -45,7 +46,6 @@ class LogisticRegression(object):
                 self.gradient_updates_dict[feature_pos[i]].append(updated_val)
                 self.gradients[feature_pos[i]] += updated_val
         return loss
-
 
     def predict(self, feature_pos, feature_val):
         logit = 0
