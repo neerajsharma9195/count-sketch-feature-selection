@@ -39,7 +39,7 @@ class LogisticRegression(object):
         for epoch in range(epochs):
             print("epoch {}".format(epoch))
             for i in range(self.num_data):
-                # print("i {}".format(i))
+                print("i {}".format(i))
                 label = self.true_labels[i]
                 example = self.samples[i]
                 loss = self.train_with_sketch(example, label)
@@ -63,6 +63,10 @@ class LogisticRegression(object):
             return np.exp(x) / (1. + np.exp(x))
 
     def loss(self, y, p):
+        if p == 1:
+            p = 0.999999
+        if p == 0:
+            p = 0.000001
         return -(y * math.log(p) + (1 - y) * math.log(1 - p))
 
     def train_with_sketch(self, example, label):
