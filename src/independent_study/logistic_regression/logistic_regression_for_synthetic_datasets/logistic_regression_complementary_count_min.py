@@ -68,7 +68,7 @@ class LogisticRegression(object):
     def train_with_sketch(self, example, label):
         logit = 0
         for i in range(len(example)):
-            val = self.top_k.get_value_for_key(i) * example[i]
+            val = self.top_k.get_value_for_key(i+1) * example[i]
             logit += val
         sigm_val = self.sigmoid(logit)
         loss = self.loss(y=label, p=sigm_val)
@@ -77,12 +77,12 @@ class LogisticRegression(object):
             for i in range(len(example)):
                 # updating the change only on previous values
                 grad_update = self.learning_rate * diff_label * example[i]
-                if i in self.top_k_dict.keys():
-                    self.top_k_dict[i].append(grad_update)
+                if i+1 in self.top_k_dict.keys():
+                    self.top_k_dict[i+1].append(grad_update)
                 value = self.cms.update(i, grad_update)
                 # todo: Kanchi: Please check this line
                 self.recovered_weight[i] = value
-                self.top_k.push(Node(i, value))
+                self.top_k.push(Node(i+1, value))
         return loss
 
     def accuracy_on_test(self):
@@ -96,10 +96,10 @@ class LogisticRegression(object):
         # print("correctly classified test examples {}".format(self.correctly_classified))
         print("Dataset Testing Done")
 
-    def predict(self, feature_pos, feature_val):
+    def predict(self, example):
         logit = 0
-        for i in range(len(feature_pos)):
-            logit += self.top_k.get_value_for_key(feature_pos[i]) * feature_val[i]
+        for i in range(len(example)):
+            logit += self.top_k.get_value_for_key(i+1) * example[i]
         a = self.sigmoid(logit)
         if a > 0.5:
             return 1
