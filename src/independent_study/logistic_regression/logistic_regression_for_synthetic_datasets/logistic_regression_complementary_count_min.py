@@ -48,13 +48,10 @@ class LogisticRegression(object):
         print("Dataset Training Done")
 
     def reset_weight_sparsity(self):
-        indexes = sorted(range(len(self.recovered_weight)), key=lambda i: abs(self.recovered_weight[i]), reverse=True)[
-                  :self.sparsity]
-        indexes = set(indexes)
-        for i in range(len(self.recovered_weight)):
-            if i not in indexes:
-                self.recovered_weight[i] = 0
-        print("Sparsity achieved", np.count_nonzero(self.recovered_weight))
+        for item in self.top_k.heap:
+            key = self.top_k.keys[item.value]
+            value = lgr.top_k.features[key]
+            self.recovered_weight[key - 1] = value
 
     def sigmoid(self, x):
         if x >= 0:
@@ -72,7 +69,7 @@ class LogisticRegression(object):
     def train_with_sketch(self, example, label):
         logit = 0
         for i in range(len(example)):
-            val = self.top_k.get_value_for_key(i+1) * example[i]
+            val = self.top_k.get_value_for_key(i + 1) * example[i]
             logit += val
         sigm_val = self.sigmoid(logit)
         loss = self.loss(y=label, p=sigm_val)
@@ -81,12 +78,12 @@ class LogisticRegression(object):
             for i in range(len(example)):
                 # updating the change only on previous values
                 grad_update = self.learning_rate * diff_label * example[i]
-                if i+1 in self.top_k_dict.keys():
-                    self.top_k_dict[i+1].append(grad_update)
+                if i + 1 in self.top_k_dict.keys():
+                    self.top_k_dict[i + 1].append(grad_update)
                 value = self.cms.update(i, grad_update)
                 # todo: Kanchi: Please check this line
-                self.recovered_weight[i] = value
-                self.top_k.push(Node(i+1, value))
+                # self.recovered_weight[i] = value
+                self.top_k.push(Node(i + 1, value))
         return loss
 
     def accuracy_on_test(self):
@@ -103,12 +100,23 @@ class LogisticRegression(object):
     def predict(self, example):
         logit = 0
         for i in range(len(example)):
-            logit += self.top_k.get_value_for_key(i+1) * example[i]
+            logit += self.top_k.get_value_for_key(i + 1) * example[i]
         a = self.sigmoid(logit)
         if a > 0.5:
             return 1
         else:
             return 0
+
+    def get_recovery_mse(self):
+        self.weight -= np.mean(self.weight)
+        self.weight /= np.std(self.weight)
+        self.recovered_weight -= np.mean(self.recovered_weight)
+        self.recovered_weight /= np.std(self.recovered_weight)
+        zip_object = zip(self.weight, self.recovered_weight)
+        difference = []
+        for list1_i, list2_i in zip_object:
+            difference.append(list1_i - list2_i)
+        return np.mean(np.square(difference))
 
 
 if __name__ == '__main__':
@@ -132,7 +140,7 @@ if __name__ == '__main__':
     cms_type = "complementary_cms"
     num_hashes = 2
     count_sketch_size = 6000
-    top_k_size = 8000
+    top_k_size = 3
     lgr = LogisticRegression(cms_type=cms_type,
                              sparsity=sparsity,
                              hash_func_counts=num_hashes,
@@ -142,3 +150,4 @@ if __name__ == '__main__':
     lgr.train_dataset(epochs=1)
     lgr.accuracy_on_test()
     print("corrrectly classified {}".format(lgr.correctly_classified))
+    lgr.get_recovery_mse()
