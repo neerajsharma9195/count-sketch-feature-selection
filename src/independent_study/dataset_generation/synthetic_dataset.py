@@ -4,12 +4,13 @@ import json
 
 
 class SyntheticDatasetGeneration:
-    def __init__(self, examples, features, sparsity, data_path):
+    def __init__(self, examples, features, sparsity, data_path, dataset_sparsity):
         print("examples {} features {} sparsity {}".format(examples, features, sparsity))
         self.features = features
         self.examples = examples
         self.sparsity = sparsity
-        self.samples = np.random.randn(self.examples, self.features)
+        self.dataset_sparsity = dataset_sparsity
+        self.samples = np.zeros((self.examples, self.features))
         self.weight = np.zeros(self.features, )
         self.true_labels = np.zeros(self.examples, )
         self.noisy_labels = np.zeros(self.examples, )
@@ -20,11 +21,19 @@ class SyntheticDatasetGeneration:
         self.save_dataset()
 
     def create_dataset(self):
+        if self.dataset_sparsity == 0:
+            self.samples = np.random.randn(self.examples, self.features)
+        else:
+            for i in range(len(self.samples)):
+                for j in range(self.dataset_sparsity):
+                    number = np.random.randint(self.features)
+                    self.samples[i][number]=np.random.randn()
         for i in range(self.sparsity):
             number = np.random.randint(self.features)
             self.weight[number] = np.random.randn()
         # Due to collisions in random number generation, we might not achieve exact sparsity
         self.sparsity = np.count_nonzero(self.weight)
+        print(self.samples)
 
     def create_noisy_true_labels(self):
         self.noisy_labels = [self.adding_noise(np.dot(example, self.weight)) for example in self.samples]
@@ -70,7 +79,7 @@ class SyntheticDatasetGeneration:
 
 
 if __name__ == '__main__':
-    dataset = SyntheticDatasetGeneration(100, 80, 3)
+    dataset = SyntheticDatasetGeneration(10, 10, 3,"",2)
     test_data_path = dataset.data_path + "data_dim_{}_{}_sparsity_{}.csv".format(dataset.examples, dataset.features, dataset.sparsity)
     data = np.loadtxt(test_data_path, delimiter=',')
     print(data.shape)
