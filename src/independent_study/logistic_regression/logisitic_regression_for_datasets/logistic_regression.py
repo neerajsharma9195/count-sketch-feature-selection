@@ -3,20 +3,20 @@ from src.processing.parse_data import process_data
 import os
 import math
 import json
-import collections
-import datetime
 
-#This file is for normal logistic regression
-#There is no compression of gradients
-#All elements considered while next step during stochastic gradient descent
+'''
+    This file is for normal logistic regression
+    There is no compression of gradients
+    All elements considered while next step during stochastic gradient descent
+ '''
 
 
 class LogisticRegression(object):
-    def __init__(self, dimensions, train_file,test_file):
+    def __init__(self, dimensions, train_file, test_file):
         self.learning_rate = 0.5
-        self.gradients = [0]*(dimensions+1)
+        self.gradients = [0] * (dimensions + 1)
         self.dimensions = dimensions
-        self.gradient_updates_dict = {k: [] for k in range(1, dimensions+1)}
+        self.gradient_updates_dict = {k: [] for k in range(1, dimensions + 1)}
         self.train_file = train_file
         self.test_file = test_file
         self.correctly_classified = 0
@@ -65,7 +65,7 @@ class LogisticRegression(object):
         print("Filepath :", filePath)
         train_labels, train_features = process_data(filePath)
         print("len of labels {}".format(len(train_labels)))
-        return train_labels,train_features
+        return train_labels, train_features
 
     def processing_dataset_test(self):
         current_directory = (os.path.dirname(__file__))
@@ -76,9 +76,9 @@ class LogisticRegression(object):
         test_filePath = os.path.join(data_directory_path, self.test_file)
         test_labels, test_features = process_data(test_filePath)
         print("Dataset Processing Done")
-        return  test_labels,test_features
+        return test_labels, test_features
 
-    def train_dataset(self,epochs):
+    def train_dataset(self, epochs):
         train_labels, train_features = self.processing_dataset_train()
         print("Dataset Training Started")
         for epoch in range(epochs):
@@ -109,26 +109,25 @@ class LogisticRegression(object):
         print("correctly classified test examples {}".format(self.correctly_classified))
         print("Dataset Testing Done")
 
-    def dump_top_K(self,filename):
+    def dump_top_K(self, filename):
         grad_list = []
         for i, gradient in enumerate(self.gradients):
             grad_list.append((i, gradient))
         topk = sorted(grad_list, key=lambda x: abs(x[1]), reverse=True)
         dict_topK = {}
-        for i,num in enumerate(topk[:8001]):
-            dict_topK[num[0]]=num[1]
-        with open(filename+str(datetime.datetime.now())+".json", 'w') as f:
+        for i, num in enumerate(topk[:8001]):
+            dict_topK[num[0]] = num[1]
+        with open(filename + ".json", 'w') as f:
             f.write(json.dumps(dict_topK))
 
-    def dump_gradient_updates(self,filename):
-        with open(filename+str(datetime.datetime.now())+".json", 'w') as f:
+    def dump_gradient_updates(self, filename):
+        with open(filename + ".json", 'w') as f:
             f.write(json.dumps(self.gradient_updates_dict))
 
 
 if __name__ == '__main__':
-    lgr = LogisticRegression(47326,"rcv1_train.binary","rcv1_test.binary")
+    lgr = LogisticRegression(47326, "rcv1_train.binary", "rcv1_test.binary")
     lgr.train_dataset(1)
     lgr.accuracy_on_test()
-    lgr.dump_top_K('../../dumps/top8000_logistic_regression')
-    lgr.dump_gradient_updates("../../dumps/logistic_regression_gradient_updates")
-
+    # lgr.dump_top_K('../../dumps/normal_logistic/topk_logistic_regression')
+    # lgr.dump_gradient_updates("../../dumps/normal_logistic/logistic_regression_gradient_updates")

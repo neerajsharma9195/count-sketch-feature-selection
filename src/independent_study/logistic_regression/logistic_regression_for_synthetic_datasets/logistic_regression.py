@@ -6,7 +6,7 @@ import datetime
 
 
 class LogisticRegression(object):
-    def __init__(self, examples, features, sparsity, dataset_files_paths):
+    def __init__(self, examples, features, sparsity, dataset_files_path):
         self.learning_rate = 0.5
         self.features = features
         self.examples = examples
@@ -17,6 +17,12 @@ class LogisticRegression(object):
         self.true_labels = np.loadtxt(dataset_files_path['true_label_path'], delimiter=',')
         self.noisy_labels = np.loadtxt(dataset_files_path['noisy_label_path'], delimiter=',')
         self.recovered_weight = np.zeros(self.features, )
+        self.non_zero_indexes = np.nonzero(self.weight)
+        print("non zero indexes of weights {}".format(self.non_zero_indexes))
+        self.non_zero_weights = []
+        for index in self.non_zero_indexes:
+            self.non_zero_weights.append(self.weight[index])
+        print("non zero weights {}".format(self.non_zero_weights))
 
     def sigmoid(self, x):
         if x >= 0:
@@ -110,20 +116,21 @@ class LogisticRegression(object):
             difference.append(list1_i - list2_i)
         return np.mean(np.square(difference))
 
+    def number_of_position_recovered(self):
+        topk_recovered = []
+        for i, item in enumerate(self.recovered_weight):
+            if item != 0:
+                topk_recovered.append(i)
+        recovered = np.intersect1d(topk_recovered, self.non_zero_indexes[0])
+        print("recovered {}".format(recovered))
+        return len(recovered)
+
 
 if __name__ == '__main__':
-    # lgr.dump_top_K('../../dumps/top8000_synthetic_logistic_regression.txt')
-    # print(lgr.sparsity)
-    # print(len(lgr.recovered_weight))
-    # print(len(lgr.weight))
-    # print(lgr.recovered_weight)
-    # print(lgr.weight)
-
-    # generate data if required
-    examples = 10000
+    examples = 12000
     features = 10000
-    sparsity = 3
-    dataset = SyntheticDatasetGeneration(examples, features, sparsity, "../../dataset_generation/dataset/")
+    sparsity = 10
+    dataset = SyntheticDatasetGeneration(examples, features, sparsity, "../../dataset_generation/dataset/", 0)
     # read data from file
     dataset_files_path = {
         "examples_path": "../../dataset_generation/dataset/data_dim_{}_{}_sparsity_{}.csv".format(examples, features, sparsity),
@@ -134,20 +141,6 @@ if __name__ == '__main__':
     lgr = LogisticRegression(examples, features, sparsity, dataset_files_path)
     lgr.train_dataset(1)
     lgr.accuracy_on_test()
+    print("recovered positions {}".format(lgr.number_of_position_recovered()))
     print("recovery mse {}".format(lgr.get_recovery_mse()))
     print("correctly classified {}".format(lgr.correctly_classified))
-    # lgr = LogisticRegression(10000, 10000, 5)
-    # lgr.train_dataset(1)
-    # lgr.accuracy_on_test()
-    # print("recovery mse {}".format(lgr.get_recovery_mse()))
-    # print("correctly classified {}".format(lgr.correctly_classified))
-    # lgr = LogisticRegression(10000, 10000, 10)
-    # lgr.train_dataset(1)
-    # lgr.accuracy_on_test()
-    # print("recovery mse {}".format(lgr.get_recovery_mse()))
-    # print("correctly classified {}".format(lgr.correctly_classified))
-    # lgr = LogisticRegression(10000, 10000, 15)
-    # lgr.train_dataset(1)
-    # lgr.accuracy_on_test()
-    # print("recovery mse {}".format(lgr.get_recovery_mse()))
-    # print("correctly classified {}".format(lgr.correctly_classified))

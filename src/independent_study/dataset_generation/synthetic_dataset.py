@@ -5,6 +5,7 @@ import json
 
 class SyntheticDatasetGeneration:
     def __init__(self, examples, features, sparsity, data_path, dataset_sparsity):
+        np.random.seed(42)
         print("examples {} features {} sparsity {}".format(examples, features, sparsity))
         self.features = features
         self.examples = examples
@@ -33,7 +34,7 @@ class SyntheticDatasetGeneration:
             self.weight[number] = np.random.randn()
         # Due to collisions in random number generation, we might not achieve exact sparsity
         self.sparsity = np.count_nonzero(self.weight)
-        print(self.samples)
+        # print(self.samples)
 
     def create_noisy_true_labels(self):
         self.noisy_labels = [self.adding_noise(np.dot(example, self.weight)) for example in self.samples]
@@ -79,7 +80,7 @@ class SyntheticDatasetGeneration:
 
 
 if __name__ == '__main__':
-    dataset = SyntheticDatasetGeneration(10, 10, 3,"",2)
+    dataset = SyntheticDatasetGeneration(10000, 10000, 25, "dataset/", 0)
     test_data_path = dataset.data_path + "data_dim_{}_{}_sparsity_{}.csv".format(dataset.examples, dataset.features, dataset.sparsity)
     data = np.loadtxt(test_data_path, delimiter=',')
     print(data.shape)

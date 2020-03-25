@@ -4,7 +4,7 @@ from src.utils.utils import isPrime
 import numpy as np
 
 
-class ConservativeCountMinSketch(object):
+class ConservativeComplementaryCountMinSketch(object):
     '''
     Complementary Count Min Sketch with Conservative updates
     '''
@@ -69,7 +69,7 @@ class ConservativeCountMinSketch(object):
 
 
 if __name__ == '__main__':
-    cms = ConservativeCountMinSketch(3, 10)
+    cms = ConservativeComplementaryCountMinSketch(3, 10)
     cms.update(8, 1)
     cms.update(8, 0.1)
     cms.update(8, - 0.1)

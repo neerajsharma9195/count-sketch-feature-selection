@@ -1,30 +1,30 @@
-import statistics as s
-import random
+import numpy as np
 from src.utils.utils import isPrime
 
 
-class CustomCountMinSketch(object):
+class ComplementaryCountMinSketch(object):
+    '''
+        hash function: ((a*number + b)%p)%w
+    '''
     def __init__(self, h, w):
+        np.random.seed(42)
         self.num_hash = h
         self.bucket_size = w
         self.countSketchPos = [[0 for i in range(self.bucket_size)] for j in range(h)]
         self.countSketchNeg = [[0 for i in range(self.bucket_size)] for j in range(h)]
-        self.first_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
-        self.second_nums = [random.randint(1, 1000) for i in range(self.num_hash)]
+        self.first_nums = [np.random.randint(1, 1000) for i in range(self.num_hash)]
+        self.second_nums = [np.random.randint(1, 1000) for i in range(self.num_hash)]
         self.ps = []
         for i in range(self.num_hash):
-            a = random.randint(self.bucket_size + 1, self.bucket_size + 3000)
+            a = np.random.randint(self.bucket_size + 1, self.bucket_size + 3000)
             while not isPrime(a):
-                a = random.randint(self.bucket_size + 1, self.bucket_size + 3000)
+                a = np.random.randint(self.bucket_size + 1, self.bucket_size + 3000)
             self.ps.append(a)
         print("ps {}".format(self.ps))
-        '''
-        hash function: ((a*number + b)%p)%w
-        '''
         first_hash_function = lambda number: ((self.first_nums[0] * number + self.second_nums[0]) % self.ps[0]) % w
         second_hash_function = lambda number: ((self.first_nums[1] * number + self.second_nums[1]) % self.ps[1]) % w
         # third_hash_function = lambda number: ((self.first_nums[2] * number + self.second_nums[2]) % self.ps[2]) % w
-        self.hashes = [first_hash_function, second_hash_function] # , third_hash_function]
+        self.hashes = [first_hash_function, second_hash_function]
 
     def get_hash_values(self, number):
         return [(i, self.first_nums[i], self.second_nums[i], self.hashes[i](number)) for i in range(len(self.hashes))]
@@ -59,16 +59,14 @@ class CustomCountMinSketch(object):
             poses.append(self.countSketchPos[i][hash_func(number)])
             negs.append(self.countSketchNeg[i][hash_func(number)])
         resp = min(poses) - max(negs)
-        # print("resp for query number {} {}".format(number, resp))
         return resp
 
 
 if __name__ == '__main__':
-    cms = CustomCountMinSketch(3, 10)
+    cms = ComplementaryCountMinSketch(3, 10)
     cms.update(8, 1)
     cms.update(8, 0.1)
     cms.update(8, - 0.1)
-    # cms.update(5)
     cms.update(1, 1)
     cms.update(2, 1)
     print("query {}".format(cms.query(8)))

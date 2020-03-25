@@ -4,8 +4,8 @@ from src.sketches.top_k import TopK, Node
 
 
 class TopKLogisticRegression(LogisticRegression):
-    def __init__(self, examples, features, sparsity):
-        super(TopKLogisticRegression, self).__init__(examples, features, sparsity)
+    def __init__(self, examples, features, sparsity, dataset_files_path):
+        super(TopKLogisticRegression, self).__init__(examples, features, sparsity, dataset_files_path)
         self.top_k = TopK(sparsity)
 
     def train(self, example, label):
@@ -26,64 +26,24 @@ class TopKLogisticRegression(LogisticRegression):
 
 
 if __name__ == '__main__':
-    # lgr.dump_top_K('../../dumps/top8000_synthetic_logistic_regression.txt')
-    # print(lgr.sparsity)
-    # print(len(lgr.recovered_weight))
-    # print(len(lgr.weight))
-    # print(lgr.recovered_weight)
-    # print(lgr.weight)
-    lgr = TopKLogisticRegression(5000, 5000, 3)
+    examples = 12000
+    features = 10000
+    sparsity = 10
+    dataset_files_path = {
+        "examples_path": "../../dataset_generation/dataset/data_dim_{}_{}_sparsity_{}.csv".format(examples, features,
+                                                                                                  sparsity),
+        "true_label_path": "../../dataset_generation/dataset/true_labels_dim_{}_{}_sparsity_{}.csv".format(examples,
+                                                                                                           features,
+                                                                                                           sparsity),
+        "noisy_label_path": "../../dataset_generation/dataset/noisy_labels_dim_{}_{}_sparsity_{}.csv".format(examples,
+                                                                                                             features,
+                                                                                                             sparsity),
+        "weights_path": "../../dataset_generation/dataset/weights_dim_{}_{}_sparsity_{}.csv".format(examples, features,
+                                                                                                    sparsity)
+    }
+    lgr = TopKLogisticRegression(examples, features, sparsity, dataset_files_path)
     lgr.train_dataset(1)
     lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
-    lgr = TopKLogisticRegression(5000, 5000, 5)
-    lgr.train_dataset(1)
-    lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
-    lgr = TopKLogisticRegression(5000, 5000, 10)
-    lgr.train_dataset(1)
-    lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
-    lgr = TopKLogisticRegression(5000, 5000, 15)
-    lgr.train_dataset(1)
-    lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
-    lgr = TopKLogisticRegression(5000, 5000, 20)
-    lgr.train_dataset(1)
-    lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
-    lgr = TopKLogisticRegression(5000, 5000, 25)
-    lgr.train_dataset(1)
-    lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
-    lgr = TopKLogisticRegression(5000, 5000, 30)
-    lgr.train_dataset(1)
-    lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
-    lgr = TopKLogisticRegression(5000, 5000, 35)
-    lgr.train_dataset(1)
-    lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
-    lgr = TopKLogisticRegression(5000, 5000, 40)
-    lgr.train_dataset(1)
-    lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
-    lgr = TopKLogisticRegression(5000, 5000, 45)
-    lgr.train_dataset(1)
-    lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
-    lgr = TopKLogisticRegression(5000, 5000, 50)
-    lgr.train_dataset(1)
-    lgr.accuracy_on_test()
-    print(lgr.get_recovery_mse())
-    print(lgr.correctly_classified)
+    print("number of data points recovered {}".format(lgr.number_of_position_recovered()))
+    print("recovery mse {}".format(lgr.get_recovery_mse()))
+    print("correctly classified {}".format(lgr.correctly_classified))

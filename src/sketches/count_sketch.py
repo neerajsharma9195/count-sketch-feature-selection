@@ -28,13 +28,6 @@ class CountSketch(object):
                 b = random.randint(self.bucket_size + 1, self.bucket_size + 3000)
             self.sign_ps.append(b)
         print("sign ps {} ps {}".format(self.sign_ps, self.ps))
-        # self.first_nums = [5, 11, 8]
-        # self.second_nums = [9, 19, 3]
-        # self.sign_firsts = [19, 18, 73]
-        # self.sign_seconds = [34, 31, 65]
-
-        # self.sign_ps = [31, 37, 23]
-        # self.ps = [13, 17, 19]
         for a, b, p in zip(self.first_nums, self.second_nums, self.ps):
             print("zip results a b p {} {} {}".format(a, b, p))
 
@@ -49,11 +42,6 @@ class CountSketch(object):
         third_sign_function = lambda number: 1 if ((self.sign_firsts[2] * number + self.sign_seconds[2]) % self.sign_ps[
             2] % 2) == 0 else -1
         self.signhashes = [first_sign_function, second_sign_function, third_sign_function]
-        # for i in range(0, self.num_hash):
-        #     self.hashes.append(lambda number: (((self.first_nums[i] * number + self.second_nums[i]) % self.ps[i]) % w))
-        # self.hashes = [lambda number: (((self.first_nums[i] * number + self.second_nums[i]) % self.ps[i]) % w) for i in range(self.num_hash)]
-        # self.signhashes = [lambda number: (1 if (((a * number + b) % p) % 2 == 0) else -1) for a, b, p in
-        #                    zip(self.sign_firsts, self.sign_seconds, self.sign_ps)]
 
     def get_hash_values(self, number):
         return [(i, self.first_nums[i], self.second_nums[i], self.hashes[i](number)) for i in range(len(self.hashes))]
@@ -62,14 +50,12 @@ class CountSketch(object):
         values = []
         for i in range(self.num_hash):
             sign = self.signhashes[i](number)
-            self.countsketch[i][self.hashes[i](number)] += sign*value
+            self.countsketch[i][self.hashes[i](number)] += sign * value
             values.append(sign * self.countsketch[i][self.hashes[i](number)])
         return s.median(values)
 
     def conservative_update(self, number):
         median_value = self.query(number)
-        print("median value {} when conservative update for number {}".format(median_value, number))
-        # todo: check if number > 0 then should we use <= or just < sign for Median value
         for i in range(self.num_hash):
             if number > 0:
                 if self.countsketch[i][self.hashes[i](number)] <= median_value:
