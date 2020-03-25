@@ -3,9 +3,9 @@ from src.independent_study.logistic_regression.logistic_regression_for_synthetic
 from src.sketches.top_k import TopK, Node
 
 
-class TopKLogisticRegression(LogisticRegression):
+class LogisticRegressionWithHeap(LogisticRegression):
     def __init__(self, examples, features, sparsity, dataset_files_path):
-        super(TopKLogisticRegression, self).__init__(examples, features, sparsity, dataset_files_path)
+        super(LogisticRegressionWithHeap, self).__init__(examples, features, sparsity, dataset_files_path)
         self.top_k = TopK(sparsity)
 
     def train(self, example, label):
@@ -41,7 +41,7 @@ if __name__ == '__main__':
         "weights_path": "../../dataset_generation/dataset/weights_dim_{}_{}_sparsity_{}.csv".format(examples, features,
                                                                                                     sparsity)
     }
-    lgr = TopKLogisticRegression(examples, features, sparsity, dataset_files_path)
+    lgr = LogisticRegressionWithHeap(examples, features, sparsity, dataset_files_path)
     lgr.train_dataset(1)
     lgr.accuracy_on_test()
     print("number of data points recovered {}".format(lgr.number_of_position_recovered()))
