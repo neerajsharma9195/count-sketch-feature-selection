@@ -81,8 +81,6 @@ if __name__ == '__main__':
     D = 47236
     time_taken = []
     top_k_size = 8000
-    top_k_file_path = "topk_features_{}.txt".format(top_k_size)
-    top_k_positions = get_top_k_positions(top_k_file_path)
     top_k_dict = {k: [] for k in range(D)}
     # model params
     cms_type = "complementary_cms"
@@ -95,18 +93,20 @@ if __name__ == '__main__':
                              top_k_dict=top_k_dict)
     start_time = time.time()
     # training
+    num_iterations = 20000
     for epoch in range(0, 1):
         print("epoch {}".format(epoch))
-        for i in range(len(labels)):
-            print("i {}".format(i))
-            label = labels[i]
+        for iteration in range(num_iterations):
+            print("i {}".format(iteration))
+            random_index = np.random.randint(len(labels))
+            label = labels[random_index]
             label = (1 + label) / 2
-            example_features = features[i]
+            example_features = features[random_index]
             feature_pos = [item[0] for item in example_features]
             feature_vals = [item[1] for item in example_features]
             loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
             print("loss {}".format(loss))
-    results_dir_path = os.path.join(current_directory, '../', 'results')
+    results_dir_path = os.path.join(current_directory, '../../', 'results')
     topk_dict_filePath = os.path.join(results_dir_path,
                                       "topk_feature_gradients_{}_all_topk_{}.json".format(cms_type,
                                                                                           top_k_size))

@@ -78,16 +78,17 @@ class LogisticRegression(object):
         print("Dataset Processing Done")
         return test_labels, test_features
 
-    def train_dataset(self, epochs):
+    def train_dataset(self, epochs, iterations):
         train_labels, train_features = self.processing_dataset_train()
         print("Dataset Training Started")
         for epoch in range(epochs):
             print("epoch {}".format(epoch))
-            for i in range(len(train_labels)):
-                print("i {}".format(i))
-                label = train_labels[i]
+            for iteration in range(iterations):
+                print("i {}".format(iteration))
+                random_index = np.random.randint(len(train_labels))
+                label = train_labels[random_index]
                 label = (1 + label) / 2
-                example_features = train_features[i]
+                example_features = train_features[random_index]
                 feature_pos = [item[0] for item in example_features]
                 feature_vals = [item[1] for item in example_features]
                 loss = self.train(feature_pos, feature_vals, label)
@@ -127,7 +128,7 @@ class LogisticRegression(object):
 
 if __name__ == '__main__':
     lgr = LogisticRegression(47326, "rcv1_train.binary", "rcv1_test.binary")
-    lgr.train_dataset(1)
+    lgr.train_dataset(1, 20000)
     lgr.accuracy_on_test()
     # lgr.dump_top_K('../../dumps/normal_logistic/topk_logistic_regression')
     # lgr.dump_gradient_updates("../../dumps/normal_logistic/logistic_regression_gradient_updates")
