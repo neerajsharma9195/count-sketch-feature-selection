@@ -4,3 +4,7 @@ scikit-learn
 matplotlib
 guppy3
 memory_profiler
+psycopg2
+pandas
+IPython
+pdfkit

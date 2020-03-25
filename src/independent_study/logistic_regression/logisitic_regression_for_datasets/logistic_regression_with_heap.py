@@ -1,13 +1,15 @@
 from src.independent_study.logistic_regression.logisitic_regression_for_datasets.logistic_regression import LogisticRegression
 from src.sketches.top_k import TopK, Node
-import datetime
-import json
 
 
-class TopKLogisticRegression(LogisticRegression):
+class LogisticRegressionWithHeap(LogisticRegression):
+    '''
+    Logistic Regression with Top K Heap where in after each iteration we are maintaining
+     top k features in heap.
+    '''
 
     def __init__(self, dimensions, train_file, test_file, size_topK):
-        super(TopKLogisticRegression,self).__init__(dimensions, train_file, test_file)
+        super(LogisticRegressionWithHeap, self).__init__(dimensions, train_file, test_file)
         self.top_k = TopK(size_topK)
         self.top_k_dict = {}
 
@@ -29,7 +31,7 @@ class TopKLogisticRegression(LogisticRegression):
         return loss
 
     def dump_top_K(self, filename):
-        with open(filename + str(datetime.datetime.now())+".json", 'w') as f:
+        with open(filename+".json", 'w') as f:
             for item in self.top_k.heap:
                 key = self.top_k.keys[item.value]
                 value = self.top_k.features[key]
@@ -38,9 +40,9 @@ class TopKLogisticRegression(LogisticRegression):
 
 
 if __name__ == '__main__':
-    lgr = TopKLogisticRegression(47326, "rcv1_train.binary", "rcv1_test.binary", 8000)
+    lgr = LogisticRegressionWithHeap(47326, "rcv1_train.binary", "rcv1_test.binary", 8000)
     lgr.train_dataset(1)
     lgr.accuracy_on_test()
-    lgr.dump_top_K('../../dumps/topK_logistic/top8000_topk_logistic_regression')
-    lgr.dump_gradient_updates("../../dumps/topK_logistic/topk_logistic_regression_gradient_updates")
+    lgr.dump_top_K('../../dumps/heap_logistic/topk_heap_logistic_regression')
+    lgr.dump_gradient_updates("../../dumps/heap_logistic/heap_logistic_regression_gradient_updates")
 

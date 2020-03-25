@@ -1,8 +1,8 @@
 import numpy as np
-from src.sketches.custom_count_min_sketch import CustomCountMinSketch
-from src.sketches.conservative_count_min_sketch import ConservativeCountMinSketch
+from src.sketches.complementary_count_min_sketch import ComplementaryCountMinSketch
+from src.sketches.conservative_complementary_count_min_sketch import ConservativeComplementaryCountMinSketch
 from src.sketches.count_sketch import CountSketch
-from src.sketches.custom_count_sketch import CustomCountSketch
+from src.sketches.conservative_count_sketch import ConservativeCountSketch
 from src.processing.parse_data import process_data
 import os
 import math
@@ -14,10 +14,10 @@ import json
 
 class LogisticRegression(object):
     cms_dicts = {
-        "complementary_cms": CustomCountMinSketch,
-        "complementary_cms_conservative": ConservativeCountMinSketch,
+        "complementary_cms": ComplementaryCountMinSketch,
+        "complementary_cms_conservative": ConservativeComplementaryCountMinSketch,
         "mission_count_sketch": CountSketch,
-        "conservative_count_sketch": CustomCountSketch
+        "conservative_count_sketch": ConservativeCountSketch
     }
 
     def __init__(self, cms_type, hash_func_counts, count_sketch_size, top_k, top_k_dict={}):
@@ -67,7 +67,7 @@ class LogisticRegression(object):
 
 if __name__ == '__main__':
     current_directory = (os.path.dirname(__file__))
-    data_directory_path = os.path.join(current_directory, '../../', 'data')
+    data_directory_path = os.path.join(current_directory, '../../../', 'data')
     fileName = "rcv1_train.binary"
     filePath = os.path.join(data_directory_path, fileName)
     labels, features = process_data(filePath)
@@ -80,14 +80,12 @@ if __name__ == '__main__':
     correctly_classified_examples = []
     D = 47236
     time_taken = []
-    # top_k_file_path = "/Users/neerajsharma/my_work/umass/umass_study/1st_sem/CS689/project_repo/src/independent_study/topk_features_2000.txt"
-    # top_k_positions = get_top_k_positions(top_k_file_path)
+    top_k_size = 8000
     top_k_dict = {k: [] for k in range(D)}
     # model params
-    top_k_size = 8000
-    cms_type = "mission_count_sketch"
-    num_hashes = 3
-    count_sketch_size = 16000
+    cms_type = "complementary_cms"
+    num_hashes = 2
+    count_sketch_size = 14000
     lgr = LogisticRegression(cms_type=cms_type,
                              hash_func_counts=num_hashes,
                              count_sketch_size=count_sketch_size,
@@ -95,18 +93,20 @@ if __name__ == '__main__':
                              top_k_dict=top_k_dict)
     start_time = time.time()
     # training
+    num_iterations = 20000
     for epoch in range(0, 1):
         print("epoch {}".format(epoch))
-        for i in range(len(labels)):
-            print("i {}".format(i))
-            label = labels[i]
+        for iteration in range(num_iterations):
+            print("i {}".format(iteration))
+            random_index = np.random.randint(len(labels))
+            label = labels[random_index]
             label = (1 + label) / 2
-            example_features = features[i]
+            example_features = features[random_index]
             feature_pos = [item[0] for item in example_features]
             feature_vals = [item[1] for item in example_features]
             loss = lgr.train_with_sketch(feature_pos, feature_vals, label)
             print("loss {}".format(loss))
-    results_dir_path = os.path.join(current_directory, '../', 'results')
+    results_dir_path = os.path.join(current_directory, '../../', 'results')
     topk_dict_filePath = os.path.join(results_dir_path,
                                       "topk_feature_gradients_{}_all_topk_{}.json".format(cms_type,
                                                                                           top_k_size))
