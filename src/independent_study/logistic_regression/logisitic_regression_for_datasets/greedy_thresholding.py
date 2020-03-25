@@ -41,7 +41,7 @@ class GreedyThresholding(LogisticRegression):
 
 if __name__ == '__main__':
     lgr = GreedyThresholding(47326, "rcv1_train.binary", "rcv1_test.binary")
-    lgr.train_dataset(1)
+    lgr.train_dataset(1,20)
     lgr.accuracy_on_test()
     lgr.dump_top_K('../../dumps/top8000_greedy_thresholding')
     lgr.dump_gradient_updates("../../dumps/greedy_thresholding_gradient_updates")
