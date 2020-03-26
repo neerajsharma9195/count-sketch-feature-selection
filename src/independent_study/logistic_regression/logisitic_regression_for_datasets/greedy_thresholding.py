@@ -1,6 +1,7 @@
 import numpy as np
 from src.processing.parse_data import process_data
-from src.independent_study.logistic_regression.logisitic_regression_for_datasets.logistic_regression import LogisticRegression
+from src.independent_study.logistic_regression.logisitic_regression_for_datasets.logistic_regression import \
+    LogisticRegression
 import os
 import math
 import json
@@ -30,18 +31,17 @@ class GreedyThresholding(LogisticRegression):
         return loss
 
     def threshold(self):
-        df = pd.DataFrame(data=self.gradients[0:])
-        df = df.abs().values.argsort(0)[:-1]
+        df = pd.DataFrame(data=self.gradients)
+        df = df.abs().values.argsort(0)[::-1]
         updated_gradients = [0] * (self.dimensions + 1)
         for i in range(1, 8001):
             updated_gradients[df[i][0]] = self.gradients[df[i][0]]
         self.gradients = updated_gradients
 
 
-
 if __name__ == '__main__':
     lgr = GreedyThresholding(47326, "rcv1_train.binary", "rcv1_test.binary")
-    lgr.train_dataset(1,20)
+    lgr.train_dataset(1, 20000)
     lgr.accuracy_on_test()
     lgr.dump_top_K('../../dumps/top8000_greedy_thresholding')
     lgr.dump_gradient_updates("../../dumps/greedy_thresholding_gradient_updates")
