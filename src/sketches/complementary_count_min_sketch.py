@@ -28,6 +28,8 @@ class ComplementaryCountMinSketch(object):
         else:
             for i in range(self.num_hash):
                 self.countSketchNeg[i][hash_indexes[i]] += abs(value)
+        return self.query(number)
+
 
     def print_cms(self):
         print("positive cms")

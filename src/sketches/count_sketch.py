@@ -14,10 +14,13 @@ class CountSketch(object):
         self.hash_func_obj = HashGeneration(self.num_hash, self.bucket_size)
 
     def update(self, number, value=1):
+        values = []
         hash_indexes, sign_funcs = self.hash_func_obj.get_hash_sign_and_value(number)
         for i in range(self.num_hash):
             sign = sign_funcs[i]
             self.countsketch[i][hash_indexes[i]] += sign * value
+            values.append(sign * self.countsketch[i][self.hashes[i](number)])
+        return s.median(values)
 
     def insert_list(self, inputs):
         for val, item in inputs:
