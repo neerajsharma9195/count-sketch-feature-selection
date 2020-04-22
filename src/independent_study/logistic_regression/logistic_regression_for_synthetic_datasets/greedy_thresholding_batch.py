@@ -55,9 +55,9 @@ if __name__ == '__main__':
         "weights_path": "../../dataset_generation/dataset/weights_dim_{}_{}_sparsity_{}_dataset_sparsity_{}.csv".format(
             examples, features, sparsity, dataset_sparsity)
     }
-    threshold = 20
-    lgr = GreedyThresholdingBatch(examples, features, sparsity, dataset_files_path, threshold, batch_size=50)
-    lgr.train_dataset(1, examples)
+    threshold = 30
+    lgr = GreedyThresholdingBatch(examples, features, sparsity, dataset_files_path, threshold, batch_size=100)
+    lgr.train_dataset(5, examples)
     lgr.accuracy_on_test()
     print("number of data points recovered {}".format(lgr.number_of_position_recovered()))
     print("recovery mse {}".format(lgr.get_recovery_mse()))
