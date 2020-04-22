@@ -19,7 +19,7 @@ class CountSketch(object):
         for i in range(self.num_hash):
             sign = sign_funcs[i]
             self.countsketch[i][hash_indexes[i]] += sign * value
-            values.append(sign * self.countsketch[i][self.hashes[i](number)])
+            values.append(sign * self.countsketch[i][hash_indexes[i]])
         return s.median(values)
 
     def insert_list(self, inputs):
