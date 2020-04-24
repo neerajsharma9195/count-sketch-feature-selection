@@ -5,6 +5,7 @@ from src.sketches.count_sketch import CountSketch
 from src.sketches.conservative_count_sketch import ConservativeCountSketch
 import math
 from src.sketches.top_k import TopK, Node
+import random
 
 
 class LogisticRegression(object):
@@ -15,20 +16,22 @@ class LogisticRegression(object):
         "conservative_count_sketch": ConservativeCountSketch
     }
 
-    def __init__(self, sparsity, cms_type, hash_func_counts, count_sketch_size, top_k, dataset_dict, top_k_dict={}):
-        np.random.seed(42)
+    def __init__(self, sparsity, cms_type, hash_func_counts, batch_size, count_sketch_size, top_k, dataset_dict,
+                 top_k_dict={}):
+        random.seed(42)
         self.learning_rate = 0.5
         self.cms = self.cms_dicts[cms_type](hash_func_counts, count_sketch_size)
         self.top_k = TopK(top_k)
         self.top_k_dict = top_k_dict
         self.load_dataset(dataset_dict)
+        self.batch_size = batch_size
         self.sparsity = sparsity
         self.recovered_weight = np.zeros(self.features, )
         self.non_zero_indexes = np.nonzero(self.weight)
         print("non zero indexes of weights {}".format(self.non_zero_indexes))
         self.non_zero_weights = []
         for index in self.non_zero_indexes:
-             self.non_zero_weights.append(self.weight[index])
+            self.non_zero_weights.append(self.weight[index])
         print("non zero weights {}".format(self.non_zero_weights))
         self.loss_val = 0
         self.correctly_classified = 0
@@ -67,12 +70,50 @@ class LogisticRegression(object):
         else:
             return np.exp(x) / (1. + np.exp(x))
 
+    def batch(self, iterable, n=1):
+        l = len(iterable)
+        for ndx in range(0, l, n):
+            yield iterable[ndx:min(ndx + n, l)]
+
     def loss(self, y, p):
         if p == 1:
             p = 0.999999
         if p == 0:
             p = 0.000001
         return -(y * math.log(p) + (1 - y) * math.log(1 - p))
+
+    def train_dataset_batch(self, epochs, total_examples):
+        for epoch in range(epochs):
+            print("epoch {}".format(epoch))
+            for iteration in self.batch(range(0, total_examples), self.batch_size):
+                self.train_batch(iteration)
+
+    def train_batch(self, examples_batch):
+        gradient = 0
+        loss = 0
+        feature_values = [0] * self.features
+        for example_index in examples_batch:
+            example, label = self.samples[example_index], self.true_labels[example_index]
+            logit = 0
+            for i in range(len(example)):
+                val = self.top_k.get_value_for_key(i + 1) * example[i]
+                feature_values[i] += example[i]
+                logit += val
+            sigm_val = self.sigmoid(logit)
+            loss = self.loss(y=label, p=sigm_val)
+            diff_label = (label - sigm_val)  # difference in label
+            if diff_label != 0:
+                for i in range(len(example)):
+                    # updating the change only on previous values
+                    if example[i] != 0:
+                        grad_update = self.learning_rate * diff_label * example[i]
+                        if i + 1 in self.top_k_dict.keys():
+                            self.top_k_dict[i + 1].append(grad_update)
+                        value = self.cms.update(i, grad_update)
+                        # self.recovered_weight[i] = value
+                        self.top_k.push(Node(i + 1, value))
+            return loss
+
 
     def train_with_sketch(self, example, label):
         logit = 0
@@ -137,7 +178,7 @@ class LogisticRegression(object):
         topk_recovered = []
         for item in self.top_k.heap:
             key = self.top_k.keys[item.value]
-            topk_recovered.append(key-1)
+            topk_recovered.append(key - 1)
         recovered = np.intersect1d(topk_recovered, self.non_zero_indexes[0])
         print("recovered {}".format(recovered))
         return len(recovered)
@@ -148,34 +189,41 @@ class LogisticRegression(object):
 
 
 if __name__ == '__main__':
-    examples = 10000
-    features = 10000
-    sparsity = 25
+    examples = 2000
+    features = 1000
+    sparsity = 50
+    dataset_sparsity = 100
     # dataset = SyntheticDatasetGeneration(examples, features, sparsity, "../../dataset_generation/dataset/", 0)
     # read data from file
     dataset_files_path = {
-        "examples_path": "../../dataset_generation/dataset/data_dim_{}_{}_sparsity_{}.csv".format(examples, features,
-                                                                                                  sparsity),
-        "true_label_path": "../../dataset_generation/dataset/true_labels_dim_{}_{}_sparsity_{}.csv".format(examples,
-                                                                                                           features,
-                                                                                                           sparsity),
-        "noisy_label_path": "../../dataset_generation/dataset/noisy_labels_dim_{}_{}_sparsity_{}.csv".format(examples,
-                                                                                                             features,
-                                                                                                             sparsity),
-        "weights_path": "../../dataset_generation/dataset/weights_dim_{}_{}_sparsity_{}.csv".format(examples, features,
-                                                                                                    sparsity)
+        "examples_path": "../../dataset_generation/dataset/data_dim_{}_{}_sparsity_{}_dataset_sparsity_{}.csv".format(
+            examples, features,
+            sparsity, dataset_sparsity),
+        "true_label_path": "../../dataset_generation/dataset/true_labels_dim_{}_{}_sparsity_{}_dataset_sparsity_{}.csv".format(
+            examples,
+            features,
+            sparsity, dataset_sparsity),
+        "noisy_label_path": "../../dataset_generation/dataset/noisy_labels_dim_{}_{}_sparsity_{}_dataset_sparsity_{}.csv".format(
+            examples,
+            features,
+            sparsity, dataset_sparsity),
+        "weights_path": "../../dataset_generation/dataset/weights_dim_{}_{}_sparsity_{}_dataset_sparsity_{}.csv".format(
+            examples, features,
+            sparsity, dataset_sparsity)
     }
-    cms_type = "complementary_cms_conservative"
+    cms_type = "complementary_cms"
     num_hashes = 2
-    count_sketch_size = 200
-    top_k_size = 25
+    count_sketch_size = 100
+    top_k_size = 100
+    batch_size = 1
     lgr = LogisticRegression(cms_type=cms_type,
                              sparsity=sparsity,
+                             batch_size=batch_size,
                              hash_func_counts=num_hashes,
                              count_sketch_size=count_sketch_size,
                              top_k=top_k_size,
                              dataset_dict=dataset_files_path)
-    lgr.train_dataset(epochs=1)
+    lgr.train_dataset(epochs=25)
     lgr.accuracy_on_test()
     print("method {}".format(cms_type))
     print("Positions recovered {}".format(lgr.number_of_position_recovered()))

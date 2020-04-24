@@ -38,8 +38,8 @@ class GreedyThresholdingBatch(LogisticRegressionBatch):
 
 
 if __name__ == '__main__':
-    examples = 10000
-    features = 10000
+    examples = 2000
+    features = 1000
     sparsity = 50
     dataset_sparsity = 100
     # examples = 100
@@ -55,9 +55,9 @@ if __name__ == '__main__':
         "weights_path": "../../dataset_generation/dataset/weights_dim_{}_{}_sparsity_{}_dataset_sparsity_{}.csv".format(
             examples, features, sparsity, dataset_sparsity)
     }
-    threshold = 30
-    lgr = GreedyThresholdingBatch(examples, features, sparsity, dataset_files_path, threshold, batch_size=100)
-    lgr.train_dataset(5, examples)
+    threshold = 80
+    lgr = GreedyThresholdingBatch(examples, features, sparsity, dataset_files_path, threshold, batch_size=2000)
+    lgr.train_dataset(100, examples)
     lgr.accuracy_on_test()
     print("number of data points recovered {}".format(lgr.number_of_position_recovered()))
     print("recovery mse {}".format(lgr.get_recovery_mse()))
