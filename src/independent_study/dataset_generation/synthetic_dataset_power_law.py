@@ -1,6 +1,7 @@
 import numpy as np
-from numpy import random
 import json
+import random
+from collections import Counter
 
 
 class SyntheticDatasetGeneration:
@@ -15,26 +16,46 @@ class SyntheticDatasetGeneration:
         self.weight = np.zeros(self.features, )
         self.true_labels = np.zeros(self.examples, )
         self.noisy_labels = np.zeros(self.examples, )
+        self.power_law_distribution()
         self.create_dataset()
         self.create_true_labels()
         self.create_noisy_true_labels()
         self.data_path = data_path
         self.save_dataset()
 
+    def power_law(self, k_min, k_max, y, gamma):
+        return ((k_max ** (-gamma + 1) - k_min ** (-gamma + 1)) * y + k_min ** (-gamma + 1.0)) ** (1.0 / (-gamma + 1.0))
+
+    def power_law_distribution(self):
+        nodes = 100000
+        power_law_distribution = np.zeros(nodes, float)
+        k_min = 1.0
+        k_max = self.features * k_min
+        gamma = 2.0
+        for n in range(nodes):
+            power_law_distribution[n] = self.power_law(k_min, k_max, np.random.uniform(0, 1), gamma)
+        self.power_law_features = [int(round(item)) for item in power_law_distribution]
+        self.feature_counters = Counter(self.power_law_features)
+        self.most_important_features = self.feature_counters.most_common()
+        print("most important features {}".format(self.most_important_features))
+
     def create_dataset(self):
         if self.dataset_sparsity == 0:
             self.samples = np.random.randn(self.examples, self.features)
         else:
             for i in range(len(self.samples)):
-                for j in range(self.dataset_sparsity):
-                    number = np.random.randint(self.features)
-                    self.samples[i][number]=np.random.randn()
-        for i in range(self.sparsity):
-            number = np.random.randint(self.features)
-            self.weight[number] = np.random.randn()
-        # Due to collisions in random number generation, we might not achieve exact sparsity
-        self.sparsity = np.count_nonzero(self.weight)
-        # print(self.samples)
+                features_poses = random.sample(self.power_law_features, self.dataset_sparsity)
+                for feature_pos in features_poses:
+                    self.samples[i][feature_pos-1] = np.random.randn()
+        if len(self.most_important_features) > self.sparsity:
+            important_weight_poses = [item[0] for item in self.most_important_features]
+            for pos in important_weight_poses:
+                self.weight[pos-1] = np.random.rand()
+        else:
+            print("number of uniques features {}".format(len(self.most_important_features)))
+            for weight_pos in self.most_important_features:
+                self.weight[weight_pos[0]-1] = np.random.randn()
+            self.sparsity = np.count_nonzero(self.weight)
 
     def create_noisy_true_labels(self):
         self.noisy_labels = [self.adding_noise(np.dot(example, self.weight)) for example in self.samples]

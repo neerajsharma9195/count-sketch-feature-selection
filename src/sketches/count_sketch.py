@@ -7,7 +7,7 @@ from src.utils.hash_generator import HashGeneration
 
 class CountSketch(object):
     def __init__(self, h, w):
-        np.random.seed(42)
+        random.seed(42)
         self.num_hash = h
         self.bucket_size = w
         self.countsketch = [[0 for i in range(self.bucket_size)] for j in range(h)]
