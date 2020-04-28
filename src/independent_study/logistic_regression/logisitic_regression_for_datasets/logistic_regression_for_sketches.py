@@ -93,7 +93,7 @@ if __name__ == '__main__':
                              top_k_dict=top_k_dict)
     start_time = time.time()
     # training
-    num_iterations = 20000
+    num_iterations = 22000
     for epoch in range(0, 1):
         print("epoch {}".format(epoch))
         for iteration in range(num_iterations):

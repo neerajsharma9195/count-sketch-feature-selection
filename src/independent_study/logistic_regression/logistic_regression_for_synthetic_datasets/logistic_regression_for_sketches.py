@@ -182,10 +182,6 @@ class LogisticRegression(object):
         recovered = np.intersect1d(topk_recovered, self.non_zero_indexes[0])
         print("recovered {}".format(recovered))
         return len(recovered)
-        # for i in range(len(topk_recovered)):
-        #     if topk_recovered[i] in self.non_zero_indexes[0]:
-        #         count += 1
-        # return count
 
 
 if __name__ == '__main__':
@@ -211,10 +207,10 @@ if __name__ == '__main__':
             examples, features,
             sparsity, dataset_sparsity)
     }
-    cms_type = "complementary_cms"
-    num_hashes = 2
-    count_sketch_size = 100
-    top_k_size = 100
+    cms_type = "mission_count_sketch"
+    num_hashes = 3
+    count_sketch_size = 140
+    top_k_size = 50
     batch_size = 1
     lgr = LogisticRegression(cms_type=cms_type,
                              sparsity=sparsity,
@@ -223,7 +219,7 @@ if __name__ == '__main__':
                              count_sketch_size=count_sketch_size,
                              top_k=top_k_size,
                              dataset_dict=dataset_files_path)
-    lgr.train_dataset(epochs=25)
+    lgr.train_dataset(epochs=4)
     lgr.accuracy_on_test()
     print("method {}".format(cms_type))
     print("Positions recovered {}".format(lgr.number_of_position_recovered()))

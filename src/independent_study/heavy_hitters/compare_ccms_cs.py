@@ -18,7 +18,7 @@ nodes = 10000
 power_law_distribution = np.zeros(nodes, float)
 k_min = 1.0
 k_max = 1000 * k_min
-gamma = 3.0
+gamma = 2.0
 
 for n in range(nodes):
     power_law_distribution[n] = power_law(k_min, k_max, np.random.uniform(0, 1), gamma)
